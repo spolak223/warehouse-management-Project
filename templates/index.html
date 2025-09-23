@@ -14,19 +14,25 @@
         <h2>
             Enter details Below:
         </h2>
-        <form method="POST" action="/user_login"
+        <form method="POST" action="/">
             <p>
-                <label for="email">Email:</label><br>
-                <input type="text" id="email">
+                <label for="user">Username:</label><br>
+                <input type="text" id="user" name="username">
 
             </p>
             
 
             <p>
-                <label for="pass">Pass:</label><br>
-                <input type="text" id="pass">
+                <label for="pass">Password:</label><br>
+                <input type="password" id="pass" name="password">
             </p>
+            <button type="submit">Login</button>
         </form>
+        <p>
+            <h3>Don't have an account?</h3>
+                <a href="/register-user"><button type="submit">Sign Up</button></a>
+        </p>
+        
             
         <div>
             <h4>

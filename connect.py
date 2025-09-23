@@ -15,3 +15,4 @@ with sqlite3.connect("logins.db") as conn:
     "username TEXT NOT NULL," \
     "password TEXT NOT NULL)")
     conn.commit()
+

@@ -12,7 +12,7 @@ with sqlite3.connect("logins.db") as conn:
     cursor.execute("" \
     "CREATE TABLE login_deets(" \
     "id INTEGER PRIMARY KEY," \
-    "username TEXT NOT NULL," \
+    "username TEXT NOT NULL UNIQUE," \
     "password TEXT NOT NULL)")
     conn.commit()
 

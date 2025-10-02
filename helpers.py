@@ -1,5 +1,11 @@
 import sqlite3
 import bcrypt
+from flask_login import UserMixin
+
+class User(UserMixin):
+    def __init__(self, id, username):
+        self.id = id
+        self.username = username
 
 
 def validate_login(username, password):
@@ -7,11 +13,10 @@ def validate_login(username, password):
         return {'success' : False, 'error' : 1, 'error_with' : 'password', 'status' : 422}
     with sqlite3.connect('databases/logins.db') as db:
         cursor = db.cursor()
-        cursor.execute('''SELECT username FROM login_deets''')
-        data = cursor.fetchall()
-        for usernames in data:
-            if username == usernames[0]:
-                return {'success' : False, 'error' : 2, 'error_with' : 'username', 'status' : 409}
+        cursor.execute('''SELECT 1 FROM login_deets WHERE username = ? ''', (username,))
+        data = cursor.fetchone()
+        if data:
+            return {'success' : False, 'error' : 2, 'error_with' : 'username', 'status' : 409}
     return {'success' : True}
 
 def create_user(username, password, conf_password):
@@ -27,16 +32,35 @@ def create_user(username, password, conf_password):
     else:
         return {'success' : False, 'error' : 3, 'error_with' : 'confirm_password', 'status' : 422}
 
-def validate_user():
-    pass
 
 def errors_map(error_number):
     errors = {
         1 : "Password too short",
         2 : "Username is already taken",
-        3 : "Passwords do not match"
+        3 : "Passwords do not match",
+        4 : "Login details are incorrect!"
     }
     return errors[error_number]
+
+def auth_user(username, password):
+    with sqlite3.connect("databases/logins.db") as db:
+        cursor = db.cursor()
+        cursor.execute('''SELECT username, password, id FROM login_deets WHERE username = ?''', (username,))
+        data = cursor.fetchone()
+        if data:
+            if bcrypt.checkpw(password.encode(), data[1]):
+                db_user, _, db_id = data
+                return {'success' : True,'user' : User(db_id, db_user)}
+
+    return {'success' : False, 'error' : 4, 'error_with' : 'login_details', 'status' : 401}
+
+
+
+
+
+
+    
+
 
     
 

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="{{ url_for('static', filename='main.js') }}"></script>
+    </head>
+    <body>
+        <h1>Login by entering details below:</h1>
+        <form id="login-form">
+            <p>
+                <label for="user">Username:</label><br>
+                <input type="text" id="user" name="user">
+
+            </p>
+
+            <p>
+                <label for="pass">Password:</label><br>
+                <input type="password" id="pass" name="pass">
+            </p>
+            <p id="error-box"></p>
+            <button type="button" id="login-btn">Login</button>
+        </form>
+    </body>
+</html>

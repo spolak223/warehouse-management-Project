@@ -83,6 +83,7 @@ if (window.location.pathname.endsWith("/register")) {
 if (window.location.pathname.endsWith("/login")) {
      loginUser()
 
+
 }
 
 function loginUser(){
@@ -90,11 +91,13 @@ function loginUser(){
         $('#login-btn').click(function(){
             let username = document.querySelector('#user').value;
             let password = document.querySelector('#pass').value;
+            const chkbox_val = document.querySelector("#remember-checkbox").checked;  
             const error_box = document.getElementById('error-box')
             error_box.style.color = "red";
             let data = {
                 'username' : username,
-                'password' : password
+                'password' : password,
+                'checkbox' : chkbox_val
             }
             fetch('/verify/login', {
                 method : 'post',
@@ -128,6 +131,8 @@ function loginUser(){
 
     })
 }
+
+
 
 
 

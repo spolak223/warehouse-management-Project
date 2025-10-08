@@ -10,9 +10,10 @@ except sqlite3.OperationalError as e:
 with sqlite3.connect("logins.db") as conn:
     cursor = conn.cursor()
     cursor.execute("" \
-    "CREATE TABLE login_deets(" \
+    "CREATE TABLE IF NOT EXISTS login_deets(" \
     "id INTEGER PRIMARY KEY," \
     "username TEXT NOT NULL UNIQUE," \
-    "password TEXT NOT NULL)")
+    "password TEXT NOT NULL, " \
+    "ROLE TEXT NOT NULL)")
     conn.commit()
 

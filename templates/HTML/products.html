@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="{{url_for("static", filename="CSS/styles.css")}}" rel="stylesheet"/>
+    </head>
+    <body>
+        <h1>Welcome to products page</h1>
+        <p>
+            Search: 
+        </p>
+        <form method="POST" action="/products">
+            <label for="filters">Filter</label>
+            <select name="filter" id="filter">
+                    <option value="H2LPrice">Highest to Lowest Price</option>
+                    <option value="L2HPrice">Lowest to Highest Price</option>
+                    <option value="H2Lyear">Highest to Lowest Year</option>
+                    <option value="L2Hyear">Lowest to Highest Year</option>
+                    <option value="H2LID">Highest to Lowest ID</option>
+                    <option value="L2HID">Lowest to Highest ID</option>
+            </select>
+            <br><br>
+            <button type="submit">Search</button>
+
+        </form>
+        
+        <div id="product-table">
+            <table>
+                <tr>
+                    <th>ID</th><th>Product ID</th><th>Product Type</th><th>Sale Price</th><th>Month</th><th>Year</th>
+                </tr>
+                
+                {%for product in products%}
+            
+                    <tr name="SaleID">
+                        <td>{{product['Sale ID']}}</td>
+                        <td>{{product['Product ID']}}</td>
+                        <td>{{product['Product Type']}}</td>
+                        <td>{{product['Sale Price']}}</td>
+                        <td>{{product.Month}}</td>
+                        <td>{{product.Year}}</td>
+                    </tr>
+                        
+                
+                {%endfor%}
+            </table>
+        </div>
+        
+    </body>
+</html>

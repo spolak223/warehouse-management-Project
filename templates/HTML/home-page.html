@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        <h1>
+            Welcome, {{ user.username }}
+        </h1>
+        <div id="menu">
+            <p><a href="/products"><button>Search Product</button></a></p>
+            
+            <p><button>Invoices</button></p>
+
+            <p><button>Stock Control</button></p>
+
+            <p><button>Settings</button></p>
+
+            
+        </div>
+        <form method="POST" action="/homepage/logout">
+            <button type="submit">Logout</button>
+        </form>
+        
+        
+    </body>
+</html>

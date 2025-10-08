@@ -1,6 +1,9 @@
 import sqlite3
 import bcrypt
 from flask_login import UserMixin
+import csv
+import pandas
+import duckdb
 
 class User(UserMixin):
     def __init__(self, id, username):
@@ -25,7 +28,7 @@ def create_user(username, password, conf_password):
         hashed_pass = bcrypt.hashpw(bpassword, bcrypt.gensalt())
         with sqlite3.connect("databases/logins.db") as db:
             cursor = db.cursor()
-            cursor.execute("""INSERT INTO login_deets(username, password) VALUES (?, ?)""", (username, hashed_pass))
+            cursor.execute("""INSERT INTO login_deets(username, password, ROLE) VALUES (?, ?, ?)""", (username, hashed_pass, "user"))
             db.commit()
             cursor.close()
         return {'success' : True}
@@ -53,6 +56,22 @@ def auth_user(username, password):
                 return {'success' : True,'user' : User(db_id, db_user)}
 
     return {'success' : False, 'error' : 4, 'error_with' : 'login_details', 'status' : 401}
+
+def create_admin(username, password):
+    pass
+
+
+
+def display_products(csv_file):
+    data = pandas.read_csv(csv_file)
+    
+    return data.to_dict(orient="records")
+
+def sort_data(csv_file, order_by):
+    if order_by == "H2LPrice":
+        query = f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Sale Price" DESC'
+        return duckdb.sql(query).df().to_dict('records')
+
 
 
 

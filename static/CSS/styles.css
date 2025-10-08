@@ -1,0 +1,31 @@
+html { 
+    font-family: 'Times New Roman', Times, serif;
+}
+
+table { 
+    table-layout: fixed;
+    width: 100%;
+    min-width: 1000px;
+    margin: 0 auto;
+    border-collapse: collapse;
+    text-align: center;
+    border: 1px solid #999999;
+}
+
+th, td { 
+    padding: 0.6em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid rgb(175, 175, 175);
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #eeeeee;
+}
+
+tbody tr:hover { 
+    background-color: rgb(209, 245, 245);
+}
+
+

@@ -2,24 +2,29 @@
 <html>
     <head>
         <link href="{{url_for("static", filename="CSS/styles.css")}}" rel="stylesheet"/>
+        <title>Products Page</title>
     </head>
     <body>
+        <a href="/homepage"><button><img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" height="50" width="50"></button></a>
         <h1>Welcome to products page</h1>
-        <p>
-            Search: 
-        </p>
+        
         <form method="POST" action="/products">
-            <label for="filters">Filter</label>
+            <input type="text" placeholder="Search" id="search" name="search"><br><br>
+            <label for="search"></label>
+            
+
+            <label for="filters">Filter: </label>
             <select name="filter" id="filter">
                     <option value="H2LPrice">Highest to Lowest Price</option>
                     <option value="L2HPrice">Lowest to Highest Price</option>
-                    <option value="H2Lyear">Highest to Lowest Year</option>
-                    <option value="L2Hyear">Lowest to Highest Year</option>
+                    <option value="H2LYear">Highest to Lowest Year</option>
+                    <option value="L2HYear">Lowest to Highest Year</option>
                     <option value="H2LID">Highest to Lowest ID</option>
                     <option value="L2HID">Lowest to Highest ID</option>
             </select>
             <br><br>
-            <button type="submit">Search</button>
+            
+            <button type="submit" accesskey="enter">Search</button>
 
         </form>
         
@@ -31,7 +36,7 @@
                 
                 {%for product in products%}
             
-                    <tr name="SaleID">
+                    <tr>
                         <td>{{product['Sale ID']}}</td>
                         <td>{{product['Product ID']}}</td>
                         <td>{{product['Product Type']}}</td>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="{{url_for("static", filename="CSS/styles.css")}}" rel="stylesheet"/>
+
+    </head>
+    <body>
+        <h1>Hello</h1>
+        <div id="all-users-removable">
+            <table>
+                <tr>
+                    <th>Username</th><th>Role</th>
+                </tr>
+
+                {%for user in user_and_role%}
+                    <tr>
+                        {%if user[0] == logged_in_as%}
+
+                            <td><b>{{user[0]}}</b></td>
+                            <td><b>{{user[1]}}</b></td>
+                        {%else%}
+                            <td>{{user[0]}}</td>
+                            <td>{{user[1]}}</td>
+                    
+                        {%endif%}
+                    </tr>
+                {%endfor%}
+
+            </table>
+            
+            
+
+        </div>
+    </body>
+</html>

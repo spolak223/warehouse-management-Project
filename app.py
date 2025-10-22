@@ -1,11 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 import helpers
-from helpers import User
+from helpers import User, admin_required
 from dotenv import load_dotenv
 import os
 import sqlite3
-import json
 from datetime import timedelta
 
 
@@ -20,17 +19,22 @@ CSV_FILE = "static/ComputerSales.csv"
 def load_user(user_id):
     with sqlite3.connect("databases/logins.db") as db:
         cursor = db.cursor()
-        cursor.execute('''SELECT id, username FROM login_deets WHERE id = ?''', (int(user_id),))
+        cursor.execute('''SELECT id, username, role FROM login_deets WHERE id = ?''', (int(user_id),))
         data = cursor.fetchone()
     
     if data:
-        return User(data[0], data[1])
+        return User(data[0], data[1], data[2])
     return None
 
 
-#07/10/2025 -> Tomorrow, add in filtering by all specified values, probably do this in SQL
-#if possible -> Also add in search, I'll have to do this through SQL it'll be easiest. 
-#IF i absolutely manage to try also adding in the admin management thing, will be a hard task
+#07/10/2025 -> Tomorrow, add in filtering by all specified values, probably do this in SQL --> DONE
+#if possible -> Also add in search, I'll have to do this through SQL it'll be easiest. -> DONE (14/10/25)
+#IF i absolutely manage to try also adding in the admin management thing, will be a hard task -> partially done heres what i need to do next:
+# > make it so that admins have their own homepage / desktop -> DONE(well partially still need to create interface for it)
+# > allow an admin to appoint another admin -> DONE
+# > create admin only resources such as disabling accounts and etc.
+
+#for tomorrow -> 22/10/25 - make it so that each row is clickable to appoint / remove admins -> i dont wanna make 2 identical html files for this and the only difference is one button :/
 
 load_dotenv()
 
@@ -48,7 +52,44 @@ def login():
 @app.route('/homepage', methods=['GET', 'POST'])
 @login_required
 def home_page():
-    return render_template('HTML/home-page.html', user=current_user)
+    if helpers.verify_role() == "verify_admin":
+        return redirect(url_for("admin_hp"))
+    return render_template('HTML/user-home-page.html', user=current_user)
+
+@app.route("/homepage/verify")
+@login_required
+def verify_user_role():
+    if helpers.verify_role() == "verify_admin":
+        return redirect(url_for("admin_hp"))
+    else:
+        return redirect(url_for("home_page"))
+
+@app.route("/homepage/admin", methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_hp():
+    return render_template("HTML/admin-home-page.html")
+
+@app.route("/admin/appoint_admin", methods=['GET', 'POST'])
+@login_required
+@admin_required
+def appoint_admins():
+    if request.method == "POST":
+        usr_to_admin = request.form.get("choose_user", False)
+        helpers.manage_admins(usr_to_admin, "appoint")
+    user_and_role = helpers.display_all_users()
+    username = getattr(current_user, "username")
+    
+    return render_template("HTML/appoint_admins_page.html", user_and_role=user_and_role, logged_in_as=username)
+
+@app.route("/admin/remove_admin", methods=['POST', 'GET'])
+@login_required
+@admin_required
+def remove_admins():
+    user_and_role = helpers.display_all_users()
+    username = getattr(current_user, "username")
+    return render_template("HTML/remove_admins_page.html", user_and_role=user_and_role, logged_in_as=username)
+    
 
 @app.route('/products', methods=['GET', 'POST'])
 @login_required
@@ -56,17 +97,23 @@ def products_page():
     products = helpers.display_products(CSV_FILE)
     if request.method == "POST":
         filter_option = request.form['filter']
-        
-        if filter_option == "H2LPrice":
-            print("Here")
-            hp = helpers.sort_data(CSV_FILE, filter_option)
-            print(hp)
-            return render_template("HTML/products.html", products=hp)
-    print("Nvm im here")    
+        search_option = request.form['search']
+        searched = helpers.searching(CSV_FILE, search_option)
+        if searched:
+            return render_template("HTML/products.html", products=searched[0])
+        filtered = helpers.sort_data(CSV_FILE, filter_option)
+        return render_template("HTML/products.html", products=filtered) 
     return render_template("HTML/products.html", products=products)
 
 
 
+
+@app.route("/homepage/admin/logout", methods=['GET', 'POST'])#
+@login_required
+@admin_required
+def adm_logout():
+    logout_user()
+    return redirect(url_for("index"))
 
 @app.route('/homepage/logout', methods=['GET', 'POST'])
 @login_required
@@ -88,7 +135,7 @@ def login_form():
             login_user(user, remember=chkbox_val)
             return jsonify({
                 "ok" : True,
-                "redirect" : url_for("home_page")
+                "redirect" : url_for("verify_user_role")
             }), 201
         else:
             error = helpers.errors_map(valid['error'])

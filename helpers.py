@@ -13,6 +13,41 @@ class User(UserMixin):
         self.role = role
 
 
+class ManageAdmins():
+    def __init__(self, text):
+        self.text = text
+        self.user_and_role = self.text['user_and_role'].split()
+         
+        
+
+    def appoint_admin(self):
+        if self.user_and_role[1] == "admin":
+            return {"pass": False, "error" : "User is already admin", "status" : 405, "error_with" : "appointment"}
+        else:
+            with sqlite3.connect("databases/logins.db") as file:
+                cursor = file.cursor()
+                cursor.execute("""UPDATE login_deets SET role = 'admin' WHERE username = ?""", (self.user_and_role[0],))
+                cursor.close()
+            return {"pass" : True}
+
+    def remove_admin(self):
+        if self.user_and_role[1] == "user":
+            return {"pass" : False, "error" : "User is not an admin", "status" : 405, "error_with" : "removing"}
+        else:
+            with sqlite3.connect("databases/logins.db") as file:
+                cursor = file.cursor()
+                cursor.execute("""UPDATE login_deets SET role = 'user' WHERE username = ?""", (self.user_and_role[0], ))
+                cursor.close()
+            
+            return {"pass" : True}
+        
+
+    def create_admin(self):
+        pass
+
+
+
+
 def validate_login(username, password):
     if len(password) < 8:
         return {'success' : False, 'error' : 1, 'error_with' : 'password', 'status' : 422}
@@ -59,8 +94,6 @@ def auth_user(username, password):
 
     return {'success' : False, 'error' : 4, 'error_with' : 'login_details', 'status' : 401}
 
-def create_admin(username, password):
-    pass
 
 
 
@@ -99,18 +132,9 @@ def verify_role():
         return "verify_admin"
     return None
 
-def manage_admins(username, action):
-    with sqlite3.connect("databases/logins.db") as file:
-        if action == "appoint":
-            cursor = file.cursor()
-            cursor.execute("""UPDATE login_deets SET role = 'admin' WHERE username = ?""", (username,))
-            cursor.close()
-            return
-        elif action == "remove":
-            cusor = file.cursor()
-            cursor.execute("""UPDATE login_deets SET role = 'user WHERE username = ?""", (username, ))
-            cursor.close()
-            return
+#def manage_admins(username, action):
+#        if action == "remove":
+
 
 
     
@@ -121,6 +145,14 @@ def display_all_users():
         cursor.execute("""SELECT username, role FROM login_deets""")
         data = cursor.fetchall()
     return data
+
+
+    
+    
+
+
+
+
 
 
 

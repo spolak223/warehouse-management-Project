@@ -1,19 +1,15 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="{{ url_for('static', filename='main.js') }}" defer></script>
         <link href="{{url_for("static", filename="CSS/styles.css")}}" rel="stylesheet"/>
-        <title>Appoint Admins Page</title>
+
     </head>
     <body>
-        <a href="/homepage/admin"><button><img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" height="50" width="50"></button></a>
-        <h1>Appoint Admins</h1>
-
-        <form method="POST" action="/admin/appoint_admin">
-            <input type="text" id="choose_user" name="choose_user" placeholder="Enter username">
-            <label for="choose_user"></label>
-        </form>
-
-        <div id="all-users-appointable">
+        <a href="/homepage/admin"><button><img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" width="50" height="50"></button></a><br>
+        
+        <div id="all-users-removable">
             <table>
                 <tr>
                     <th>Username</th><th>Role</th>
@@ -36,7 +32,19 @@
             </table>
             
             
-
+            
         </div>
+        <div id="admin_select_buttons">
+            <button id="appoint-admin"> 
+                Appoint Admin
+            </button>
+
+            <button id="remove-admin">
+                Remove Admin
+            </button>
+        </div>
+
+        <h3><p id="manager_error_box"></p></h3>
+            
     </body>
 </html>

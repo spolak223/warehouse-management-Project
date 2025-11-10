@@ -15,6 +15,8 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 CSV_FILE = "static/ComputerSales.csv"
 
+
+
 @login_manager.user_loader
 def load_user(user_id):
     with sqlite3.connect("databases/logins.db") as db:
@@ -70,25 +72,41 @@ def verify_user_role():
 def admin_hp():
     return render_template("HTML/admin-home-page.html")
 
-@app.route("/admin/appoint_admin", methods=['GET', 'POST'])
+@app.route("/admin/manage_admins", methods=['POST', 'GET'])
 @login_required
 @admin_required
-def appoint_admins():
-    if request.method == "POST":
-        usr_to_admin = request.form.get("choose_user", False)
-        helpers.manage_admins(usr_to_admin, "appoint")
-    user_and_role = helpers.display_all_users()
-    username = getattr(current_user, "username")
-    
-    return render_template("HTML/appoint_admins_page.html", user_and_role=user_and_role, logged_in_as=username)
+def manage_admins():
+    if request.is_json:
+        role_user_text = request.get_json()
+        admin_manager = helpers.ManageAdmins(role_user_text)
+        if role_user_text['action'] == "appoint":
+            valid = admin_manager.appoint_admin()
+            if not valid['pass']:
+                return jsonify({ 
+                    "ok" : False,
+                    "fieldErrors" : {valid['error_with'] : valid['error']}
+                }), valid['status']
 
-@app.route("/admin/remove_admin", methods=['POST', 'GET'])
-@login_required
-@admin_required
-def remove_admins():
+            else:
+                return jsonify({
+                    "ok" : True
+                }        
+            ), 201
+        elif role_user_text['action'] == "remove":
+            valid = admin_manager.remove_admin()
+            if not valid['pass']:
+                return jsonify({
+                    "ok" : False,
+                    "fieldErrors" : {valid['error_with'] : valid['error']}
+                }), valid['status']
+            else:
+                return jsonify({ 
+                    "ok" : True
+                }), 201
+
     user_and_role = helpers.display_all_users()
     username = getattr(current_user, "username")
-    return render_template("HTML/remove_admins_page.html", user_and_role=user_and_role, logged_in_as=username)
+    return render_template("HTML/admin_manager.html", user_and_role=user_and_role, logged_in_as=username)
     
 
 @app.route('/products', methods=['GET', 'POST'])

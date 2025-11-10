@@ -111,7 +111,7 @@ function loginUser(){
                 } else if (res.status === 401) { 
                     return res.json()
                 } else { 
-                    throw new Error("Unexpected Err or!")
+                    throw new Error("Unexpected Error!")
                 }
 
 
@@ -124,7 +124,7 @@ function loginUser(){
                 }
             }).catch(err => {
                             console.error("Host-side error: ", err)
-                            error_box.innerHTML = "Something went wrong. Please try again later!"
+                            
                             
             }) 
         })
@@ -132,12 +132,136 @@ function loginUser(){
     })
 }
 
-function selectAdmin() { 
+if (window.location.pathname.endsWith("/admin/manage_admins")) {
+    selectAdmin()
     
+
+}
+
+function selectAdmin() {
+    const all_rows = document.querySelectorAll("tbody tr");
+    let highlight_row = null;
+    let text = "";
+
+
+    
+    for (let i = 0; i < all_rows.length; i++) {
+        
+        all_rows[i].addEventListener("click", async function(event) {
+            event.stopPropagation();
+
+           
+
+            if (highlight_row !== null && highlight_row !== all_rows[i]) {
+                console.log("Should remove the highlight!!") 
+                highlight_row.classList.remove("select");
+            }
+
+            all_rows[i].classList.toggle("select")
+
+            if (all_rows[i].classList.contains("select")) { 
+                highlight_row = all_rows[i]
+                text = highlight_row.textContent.trim().replace(/\s+/g, " ")
+                appoint_admin(text)
+                remove_admin(text)
+                
+                
+
+            }
+            else { 
+                highlight_row = null;
+                text = ""
+            }
+
+            
+
+            
+            
+        })
+    }
+}
+
+function appoint_admin(text) { 
+        $(document).ready(function(){ 
+            $("#appoint-admin").click( async function() {
+                let data = {
+                    "action" : "appoint",
+                    "user_and_role" : text 
+
+                }
+                await fetch("/admin/manage_admins", {
+                    method : "POST",
+                    headers : {"Content-Type" : "application/json"},
+                    body : JSON.stringify(data) 
+                    }    
+                ).then(res => { 
+                    if (res.status === 201) {
+                        window.location.reload();
+                        return res.json() 
+
+                    } else if (res.status === 405){ 
+                        return res.json()
+
+                    } else { 
+                        throw new Error("Unexpected error!")
+                    }
+                    
+                        
+                }
+
+                ).then(body => { 
+                    if (body.fieldErrors) { 
+                        ErrorHandler("User is already admin!", 1500)
+                        
+                    }
+                })
+            }
+            )
+        }
+    )
+}
+
+function remove_admin(text) { 
+    $(document).ready(function() { 
+        $('#remove-admin').click(async function() { 
+            let data = {
+                "action" : "remove",
+                "user_and_role" : text
+            }
+            await fetch("/admin/manage_admins", { 
+                method : "POST",
+                headers : {"Content-Type" : "application/json"},
+                body : JSON.stringify(data)
+            }).then(res => { 
+                if (res.status === 201) { 
+                    window.location.reload()
+                    return res.json()
+                } else if (res.status === 405) { 
+                    return res.json()
+                } else { 
+                    throw new Error("Unexpected Error!")
+                }
+            }).then(body => { 
+                if (body.fieldErrors) { 
+                    ErrorHandler("User is not an admin!", 1500)
+                }
+            })
+        })
+    })
 }
 
 
+function ErrorHandler(error_msg, duration_ms) {
+    const manager_error_box = document.getElementById("manager_error_box")
+    manager_error_box.style.color = "red";
+    manager_error_box.innerHTML = error_msg;
 
+    setTimeout(() => {
+        manager_error_box.innerHTML = "";
+    }, duration_ms)
+
+
+}
 
 
 

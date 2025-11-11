@@ -142,6 +142,7 @@ function selectAdmin() {
     const all_rows = document.querySelectorAll("tbody tr");
     let highlight_row = null;
     let text = "";
+    let selected_user = null;
 
 
     
@@ -153,8 +154,8 @@ function selectAdmin() {
            
 
             if (highlight_row !== null && highlight_row !== all_rows[i]) {
-                console.log("Should remove the highlight!!") 
                 highlight_row.classList.remove("select");
+                selected_user = null
             }
 
             all_rows[i].classList.toggle("select")
@@ -162,15 +163,18 @@ function selectAdmin() {
             if (all_rows[i].classList.contains("select")) { 
                 highlight_row = all_rows[i]
                 text = highlight_row.textContent.trim().replace(/\s+/g, " ")
-                appoint_admin(text)
-                remove_admin(text)
-                
-                
+                if (selected_user === null) { 
+                    selected_user = text
+
+                } else if (selected_user !== null) { 
+                    selected_user = text
+                }
 
             }
             else { 
                 highlight_row = null;
                 text = ""
+                selected_user = null
             }
 
             
@@ -179,16 +183,30 @@ function selectAdmin() {
             
         })
     }
+    $(document).ready(function(){ 
+        $("#appoint-admin").click(async function() {
+            await appoint_admin(selected_user)
+
+
+        })
+    })
+
+    $(document).ready(function() { 
+        $("#remove-admin").click(async function(){ 
+            await remove_admin(selected_user)
+
+        })
+    })
 }
 
-function appoint_admin(text) { 
-        $(document).ready(function(){ 
-            $("#appoint-admin").click( async function() {
+async function appoint_admin(text) { 
                 let data = {
                     "action" : "appoint",
                     "user_and_role" : text 
 
                 }
+
+
                 await fetch("/admin/manage_admins", {
                     method : "POST",
                     headers : {"Content-Type" : "application/json"},
@@ -216,14 +234,9 @@ function appoint_admin(text) {
                     }
                 })
             }
-            )
-        }
-    )
-}
+        
 
-function remove_admin(text) { 
-    $(document).ready(function() { 
-        $('#remove-admin').click(async function() { 
+async function remove_admin(text) { 
             let data = {
                 "action" : "remove",
                 "user_and_role" : text
@@ -246,9 +259,7 @@ function remove_admin(text) {
                     ErrorHandler("User is not an admin!", 1500)
                 }
             })
-        })
-    })
-}
+        }
 
 
 function ErrorHandler(error_msg, duration_ms) {

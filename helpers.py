@@ -20,7 +20,8 @@ class ManageAdmins():
          
         
 
-    def appoint_admin(self):
+    def appoint_admin(self, current_user):
+        print(getattr(current_user, "username"))
         if self.user_and_role[1] == "admin":
             return {"pass": False, "error" : "User is already admin", "status" : 405, "error_with" : "appointment"}
         else:

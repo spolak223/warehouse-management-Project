@@ -29,14 +29,7 @@ def load_user(user_id):
     return None
 
 
-#07/10/2025 -> Tomorrow, add in filtering by all specified values, probably do this in SQL --> DONE
-#if possible -> Also add in search, I'll have to do this through SQL it'll be easiest. -> DONE (14/10/25)
-#IF i absolutely manage to try also adding in the admin management thing, will be a hard task -> partially done heres what i need to do next:
-# > make it so that admins have their own homepage / desktop -> DONE(well partially still need to create interface for it)
-# > allow an admin to appoint another admin -> DONE
-# > create admin only resources such as disabling accounts and etc.
 
-#for tomorrow -> 22/10/25 - make it so that each row is clickable to appoint / remove admins -> i dont wanna make 2 identical html files for this and the only difference is one button :/
 
 load_dotenv()
 
@@ -80,7 +73,7 @@ def manage_admins():
         role_user_text = request.get_json()
         admin_manager = helpers.ManageAdmins(role_user_text)
         if role_user_text['action'] == "appoint":
-            valid = admin_manager.appoint_admin()
+            valid = admin_manager.appoint_admin(current_user)
             if not valid['pass']:
                 return jsonify({ 
                     "ok" : False,
@@ -126,7 +119,7 @@ def products_page():
 
 
 
-@app.route("/homepage/admin/logout", methods=['GET', 'POST'])#
+@app.route("/homepage/admin/logout", methods=['GET', 'POST'])
 @login_required
 @admin_required
 def adm_logout():

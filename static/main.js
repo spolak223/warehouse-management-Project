@@ -229,7 +229,7 @@ async function appoint_admin(text) {
 
                 ).then(body => { 
                     if (body.fieldErrors) { 
-                        ErrorHandler("User is already admin!", 1500)
+                        ErrorHandler(body.fieldErrors.appointing, 1500)
                         
                     }
                 })
@@ -256,7 +256,7 @@ async function remove_admin(text) {
                 }
             }).then(body => { 
                 if (body.fieldErrors) { 
-                    ErrorHandler("User is not an admin!", 1500)
+                    ErrorHandler(body.fieldErrors.removing, 1500)
                 }
             })
         }

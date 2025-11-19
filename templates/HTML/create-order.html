@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        <h1>Order Creator</h1>
+        <h3>Please enter in the order details</h3>
+        <h4>This will be used to auto-generate an invoice</h4>
+
+        <form method="POST" action="/admin/create_order">
+            <p>Customer Name</p>
+            <input type="text" placeholder="Enter here" id="c_name" name="c_name">
+            <label for="c_name"></label>
+
+            <p>Customer Address</p>
+            <input type="text" placeholder="Enter here" id="c_address" name="c_address">
+            <label for="c_name"></label>
+            
+            <p>Order Date</p>
+            <input type="date" id="o_date" name="o_date">
+            <label for="o_date`"></label>
+
+            <p>
+                <label for="status">Status</label><br><br>
+                <select name="status" id="status">
+                    <option>Awaiting-Payment</option>
+                    <option>Pending</option>
+                    <option>Refund</option>
+                    <option>Completed</option>
+                </select>
+            </p>
+                
+                
+            <p>Product Type</p>
+            <input type="text" placeholder="Enter here" id="p_type" name="p_type">
+            <label for="p_type"></label>
+
+            <p>Product ID</p>
+            <input type="text" placeholder="Enter here" id="p_id" name="p_id">
+            <label for="p_id"></label>
+
+            <p>Quantity Ordered</p>
+            <input type="number" placeholder="Enter here" id="q_ordered" name="q_ordered">
+            <label for="q_ordered"></label>
+
+
+            <p>Subtotal</p>
+            <input type="number" placeholder="Enter here" id="subtotal" name="subtotal">
+            <label for="subtotal"></label>
+
+            <p><button type="submit">Create order</button></p>
+        </form>
+
+    </body>
+</html>

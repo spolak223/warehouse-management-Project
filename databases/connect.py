@@ -17,3 +17,19 @@ with sqlite3.connect("logins.db") as conn:
     "ROLE TEXT NOT NULL)")
     conn.commit()
 
+
+with sqlite3.connect("orders.db") as orders_DB:
+    cursor = orders_DB.cursor()
+    cursor.execute("" \
+    "CREATE TABLE IF NOT EXISTS orders(" \
+    "order_id INTEGER PRIMARY KEY," \
+    "customer_name TEXT," \
+    "customer_address TEXT," \
+    "order_date DATE," \
+    "status TEXT," \
+    "subtotal REAL NOT NULL," \
+    "vat REAL NOT NULL," \
+    "total REAL NOT NULL)")
+    orders_DB.commit()
+    orders_DB.close()
+

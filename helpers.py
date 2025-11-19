@@ -21,9 +21,11 @@ class ManageAdmins():
         
 
     def appoint_admin(self, current_user):
-        print(getattr(current_user, "username"))
-        if self.user_and_role[1] == "admin":
-            return {"pass": False, "error" : "User is already admin", "status" : 405, "error_with" : "appointment"}
+        print(f"this? : {getattr(current_user, "username")}")
+        if self.user_and_role[1].strip() == "admin":
+            return {"pass": False, "error" : "User is already admin", "status" : 405, "error_with" : "appointing"}
+        elif getattr(current_user, "username") == self.user_and_role[0]:
+            return {"pass" : False, "error" : "Cannot change your own roles!", "status" : 405, "error_with" : "appointing"}
         else:
             with sqlite3.connect("databases/logins.db") as file:
                 cursor = file.cursor()
@@ -32,8 +34,10 @@ class ManageAdmins():
             return {"pass" : True}
 
     def remove_admin(self):
-        if self.user_and_role[1] == "user":
+        if self.user_and_role[1].strip() == "user":
             return {"pass" : False, "error" : "User is not an admin", "status" : 405, "error_with" : "removing"}
+        elif getattr(current_user, "username") == self.user_and_role[0]:
+            return {"pass" : False, "error" : "Cannot change your own roles!", "status" : 405, "error_with" : "removing"}
         else:
             with sqlite3.connect("databases/logins.db") as file:
                 cursor = file.cursor()
@@ -45,6 +49,32 @@ class ManageAdmins():
 
     def create_admin(self):
         pass
+
+class CreateOrder():
+    def __init__(self):
+        pass
+
+    def verify_order_validity(self):
+        pass
+    #this function ill just use to check if any inputs are none, to see if qty ordered exceeds what is actually in stock
+    #think thats about it
+
+    def add_order_to_db(self):
+        pass
+    #gonna use this to add my order to my database 
+
+    def verify_stock(self):
+        pass
+    #ill use this as a little helper function to just check if theres actually enough stock
+
+    def calculate_subtotal(self, quantity, price):
+        pass
+    #this calculates the price before VAT is added on
+    #im using 2 functions to display the subtotal and total as im pretty sure in all businesses you first see the subtotal and then the total on any invoice / receipt
+
+    def calculate_total(self, subtotal):
+        pass
+    #calculates total which will use VAT and subtotal price
 
 
 

@@ -100,6 +100,22 @@ def manage_admins():
     user_and_role = helpers.display_all_users()
     username = getattr(current_user, "username")
     return render_template("HTML/admin_manager.html", user_and_role=user_and_role, logged_in_as=username)
+
+@app.route("/admin/create_order", methods=["POST", "GET"])
+@login_required
+@admin_required
+def generate_invoice():
+    if request.method == "POST":
+        order = {'customer_name' : request.form['c_name'], 
+                 'customer_address' : request.form['c_address'], 
+                 'order_date' : request.form['o_date'],
+                 'order_status' : request.form['status'],
+                 'product_type' : request.form['p_type'],
+                 'product_id' : request.form['p_id'],
+                 'quantity_ordered' : request.form['q_ordered'],
+                 'subtotal' : request.form['subtotal']}
+        print(order)
+    return render_template("HTML/create-order.html")
     
 
 @app.route('/products', methods=['GET', 'POST'])

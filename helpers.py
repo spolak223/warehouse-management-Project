@@ -5,6 +5,7 @@ import duckdb
 from functools import wraps
 from flask_login import current_user, UserMixin
 from flask import abort
+from datetime import datetime
 
 class User(UserMixin):
     def __init__(self, id, username, role):
@@ -51,30 +52,56 @@ class ManageAdmins():
         pass
 
 class CreateOrder():
-    def __init__(self):
-        pass
+    def __init__(self, order, CSV_FILE):
+        self.order = order
+        self.CSV_FILE = CSV_FILE
+        self.VAT = 1.2
 
-    def verify_order_validity(self):
-        pass
-    #this function ill just use to check if any inputs are none, to see if qty ordered exceeds what is actually in stock
-    #think thats about it
 
-    def add_order_to_db(self):
-        pass
-    #gonna use this to add my order to my database 
+    def verify_order_validity(self, product_type, SKU_code):
+        if self.order['quantity_ordered']:
+            if int(self.order['quantity_ordered']) != 0:
+                query = f"SELECT SKU, Category FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ? AND Category = ?"
+                request = duckdb.execute(query, [SKU_code, product_type]).df().to_dict("records")
+                if not request:
+                    return {"error" : "Orders' SKU code does not match the type of the product!"}, False
+                for _, value in self.order.items():
+                    if value.strip() == "":
+                        return {"error" : "Missing field/s!"}, False
+                    
+                date_of_order = datetime.strptime(self.order['order_date'], '%Y-%m-%d').strftime('%d/%m/%Y')
+                todays_date = datetime.today().strftime('%d/%m/%Y')
 
-    def verify_stock(self):
-        pass
-    #ill use this as a little helper function to just check if theres actually enough stock
+                if date_of_order < todays_date:
+                    return {"error" : "Order cannot be placed in the past!"}, False
+                return True
+        return {"error" : "Quantity ordered cannot be empty!"}, False
+        
+        
 
-    def calculate_subtotal(self, quantity, price):
-        pass
-    #this calculates the price before VAT is added on
-    #im using 2 functions to display the subtotal and total as im pretty sure in all businesses you first see the subtotal and then the total on any invoice / receipt
 
-    def calculate_total(self, subtotal):
-        pass
-    #calculates total which will use VAT and subtotal price
+    def add_order_to_db(self, order):
+        with sqlite3.connect("databases/orders.db") as orders:
+            cursor = orders.cursor()
+            pass
+            
+
+    def verify_stock(self, order_qty, SKU_code):
+        query = f"SELECT Stock FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ?"
+        request = duckdb.execute(query, [SKU_code]).df().to_dict("records")
+        if request:
+            if request[0]['Stock'] < int(order_qty):
+                return {"error" : "Current order of stock exceeds available stock!"}, False
+        return True
+        
+
+    def calculate_total(self, qty_ordered, SKU_code):
+        query = f"SELECT Price FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ?"
+        request = duckdb.execute(query, [SKU_code]).df().to_dict("records")
+        if request:
+            subtotal = float(request[0]['Price']) * int(qty_ordered)
+            total = subtotal * self.VAT
+            return round(total, 2)
 
 
 
@@ -134,21 +161,33 @@ def display_products(csv_file):
     return data.to_dict(orient="records")
 
 def sort_data(csv_file, order_by):
-    filter_dict = {'H2LPrice' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Sale Price" DESC',
-                   'L2HPrice' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Sale Price" ASC',
-                   'H2LYear' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Year" DESC', 
-                   'L2HYear' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Year" ASC',
-                   'H2LID' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Sale ID" DESC', 
-                   'L2HID' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Sale ID" ASC'}
+    filter_dict = {'H2LPrice' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Price" DESC',
+                   'L2HPrice' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Price" ASC',
+                   'H2LName' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Name" DESC', 
+                   'L2HName' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Name" ASC',
+                   'H2LStock' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Stock" DESC', 
+                   'L2HStock' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Stock" ASC',
+                   'H2LID' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "ID" DESC',
+                   'L2HID' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "ID" ASC'}
     return duckdb.sql(filter_dict[order_by]).df().to_dict("records")
 
-def searching( csv_file, user_inp=None):
-    if user_inp:
+def search_and_filter(csv_file, user_inp, order_by):
+    if user_inp and order_by:
+        print("function should be working!")
+        filter_dict = {'H2LPrice' : "Price DESC",
+                    'L2HPrice' : "Price ASC",
+                    'H2LName' : "Name DESC",
+                    'L2HName' : "Name ASC",
+                    'H2LStock' : "Stock DESC",
+                    'L2HStock' : "Stock ASC",
+                    'H2LID' : "ID DESC",
+                    'L2HID' : "ID ASC"}
+        order_value = filter_dict[order_by]
         search = f"%{user_inp}%"
-        query = f'SELECT * FROM read_csv_auto("{csv_file}") WHERE "Product ID" ILIKE ?'
-        return duckdb.execute(query, [search]).df().to_dict("records"), True
-    else:
-        return False
+        query = f'''SELECT * FROM read_csv_auto("{csv_file}") WHERE "SKU" ILIKE ? OR "Name" ILIKE ? ORDER BY {order_value}'''
+        return duckdb.execute(query, [search, search]).df().to_dict("records"), True
+    return False
+    
     
 def admin_required(func):
     @wraps(func)
@@ -163,12 +202,6 @@ def verify_role():
         return "verify_admin"
     return None
 
-#def manage_admins(username, action):
-#        if action == "remove":
-
-
-
-    
 
 def display_all_users():
     with sqlite3.connect("databases/logins.db") as file:
@@ -176,6 +209,7 @@ def display_all_users():
         cursor.execute("""SELECT username, role FROM login_deets""")
         data = cursor.fetchall()
     return data
+
 
 
     

@@ -17,10 +17,13 @@
             <select name="filter" id="filter">
                     <option value="H2LPrice">Highest to Lowest Price</option>
                     <option value="L2HPrice">Lowest to Highest Price</option>
-                    <option value="H2LYear">Highest to Lowest Year</option>
-                    <option value="L2HYear">Lowest to Highest Year</option>
+                    <option value="H2LName">Highest to Lowest Name</option>
+                    <option value="L2HName">Lowest to Highest Name</option>
+                    <option value="H2LStock">Highest to Lowest Stock</option>
+                    <option value="L2HStock">Lowest to Highest Stock</option>
                     <option value="H2LID">Highest to Lowest ID</option>
                     <option value="L2HID">Lowest to Highest ID</option>
+
             </select>
             <br><br>
             
@@ -31,18 +34,18 @@
         <div id="product-table">
             <table>
                 <tr>
-                    <th>ID</th><th>Product ID</th><th>Product Type</th><th>Sale Price</th><th>Month</th><th>Year</th>
+                    <th>ID</th><th>Name</th><th>Category</th><th>SKU</th><th>Price</th><th>Stock Qty</th>
                 </tr>
                 
                 {%for product in products%}
             
                     <tr>
-                        <td>{{product['Sale ID']}}</td>
-                        <td>{{product['Product ID']}}</td>
-                        <td>{{product['Product Type']}}</td>
-                        <td>{{product['Sale Price']}}</td>
-                        <td>{{product.Month}}</td>
-                        <td>{{product.Year}}</td>
+                        <td>{{product['ID']}}</td>
+                        <td>{{product['Name']}}</td>
+                        <td>{{product['Category']}}</td>
+                        <td>{{product['SKU']}}</td>
+                        <td>{{product['Price']}}</td>
+                        <td>{{product['Stock']}}</td>
                     </tr>
                         
                 

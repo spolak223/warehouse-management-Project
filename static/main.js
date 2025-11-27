@@ -229,7 +229,7 @@ async function appoint_admin(text) {
 
                 ).then(body => { 
                     if (body.fieldErrors) { 
-                        ErrorHandler(body.fieldErrors.appointing, 1500)
+                        ErrorHandlerAdmins(body.fieldErrors.appointing, 1500)
                         
                     }
                 })
@@ -256,16 +256,16 @@ async function remove_admin(text) {
                 }
             }).then(body => { 
                 if (body.fieldErrors) { 
-                    ErrorHandler(body.fieldErrors.removing, 1500)
+                    ErrorHandlerAdmins(body.fieldErrors.removing, 1500)
                 }
             })
         }
 
 
-function ErrorHandler(error_msg, duration_ms) {
-    const manager_error_box = document.getElementById("manager_error_box")
-    manager_error_box.style.color = "red";
-    manager_error_box.innerHTML = error_msg;
+function ErrorHandlerAdmins(error_msg, duration_ms) {
+    const error_box = document.getElementById("manager_error_box")
+    error_box.style.color = "red";
+    error_box.innerHTML = error_msg;
 
     setTimeout(() => {
         manager_error_box.innerHTML = "";
@@ -273,6 +273,25 @@ function ErrorHandler(error_msg, duration_ms) {
 
 
 }
+
+function ErrorHandlerOrders(){
+    const error_box = document.getElementById("error_box")
+
+}
+
+if (window.location.pathname.endsWith("/admin/verify_order")) {
+    verify_user_order() 
+
+}
+
+function verify_user_order() {
+    $(document).ready(function(){
+        let customer_order = document.getElementById("customer_order")
+        console.log(customer_order)
+
+    })
+}
+
 
 
 

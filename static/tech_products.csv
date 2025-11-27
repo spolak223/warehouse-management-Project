@@ -1,0 +1,101 @@
+ID,Name,Category,SKU,Price,Stock
+1,Samsung Galaxy Tab S9,Tablet,TAB-100,283.47,139
+2,Amazon Fire HD 10,Tablet,TAB-101,1426.38,190
+3,Apple Watch Series 10,Wearable,WEA-102,636.13,133
+4,WD Black SN850X,Storage,STO-103,1925.4,72
+5,Amazon Fire HD 10,Tablet,TAB-104,435.01,74
+6,Apple Watch Series 10,Wearable,WEA-105,2512.51,133
+7,Samsung Galaxy Tab S9,Tablet,TAB-106,2194.4,76
+8,Fitbit Versa 5,Wearable,WEA-107,327.89,34
+9,Samsung Galaxy Tab S9,Tablet,TAB-108,2616.96,88
+10,iPhone 15 Pro,Phone,PHO-109,2479.78,36
+11,Apple MacBook Pro 14,Laptop,LAP-110,2809.9,80
+12,AirPods Pro 3,Headphones,HEA-111,231.63,181
+13,Amazon Fire HD 10,Tablet,TAB-112,957.76,46
+14,ASUS ROG Zephyrus G14,Laptop,LAP-113,620.85,181
+15,Razer DeathAdder V4,Accessory,ACC-114,2696.43,66
+16,Fitbit Versa 5,Wearable,WEA-115,499.27,90
+17,Razer DeathAdder V4,Accessory,ACC-116,2655.27,138
+18,Lenovo Tab P12 Pro,Tablet,TAB-117,630.71,163
+19,Sony WH-1000XM6,Headphones,HEA-118,1473.39,82
+20,Apple MacBook Pro 14,Laptop,LAP-119,2614.37,105
+21,WD Black SN850X,Storage,STO-120,1526.13,145
+22,Razer DeathAdder V4,Accessory,ACC-121,2922.96,143
+23,Razer DeathAdder V4,Accessory,ACC-122,2929.75,190
+24,HP Spectre x360,Laptop,LAP-123,2389.36,157
+25,OnePlus 12,Phone,PHO-124,2297.63,163
+26,Sony Xperia 5 V,Phone,PHO-125,2052.77,31
+27,Samsung Galaxy S24 Ultra,Phone,PHO-126,1711.44,200
+28,HP Spectre x360,Laptop,LAP-127,1419.9,199
+29,Razer DeathAdder V4,Accessory,ACC-128,2435.58,20
+30,OnePlus 12,Phone,PHO-129,576.8,63
+31,WD Black SN850X,Storage,STO-130,941.48,164
+32,Fitbit Versa 5,Wearable,WEA-131,427.76,73
+33,AirPods Pro 3,Headphones,HEA-132,2764.59,163
+34,OnePlus 12,Phone,PHO-133,474.37,85
+35,Samsung Galaxy Watch 7,Wearable,WEA-134,137.25,90
+36,Sony WH-1000XM6,Headphones,HEA-135,1502.0,25
+37,OnePlus 12,Phone,PHO-136,866.26,168
+38,iPhone 15 Pro,Phone,PHO-137,1297.02,164
+39,Bose QuietComfort Ultra,Headphones,HEA-138,1003.83,165
+40,AirPods Pro 3,Headphones,HEA-139,2215.19,83
+41,ASUS ROG Zephyrus G14,Laptop,LAP-140,1340.87,43
+42,Amazon Fire HD 10,Tablet,TAB-141,621.87,18
+43,Samsung Galaxy S24 Ultra,Phone,PHO-142,386.36,61
+44,Xiaomi 14 Pro,Phone,PHO-143,1462.81,38
+45,Xiaomi 14 Pro,Phone,PHO-144,2591.33,107
+46,WD Black SN850X,Storage,STO-145,2958.93,59
+47,Garmin Fenix 8,Wearable,WEA-146,230.71,126
+48,Amazon Fire HD 10,Tablet,TAB-147,310.66,108
+49,Razer DeathAdder V4,Accessory,ACC-148,2427.02,194
+50,Sennheiser Momentum 5,Headphones,HEA-149,187.93,158
+51,Razer DeathAdder V4,Accessory,ACC-150,1272.51,167
+52,iPhone 15 Pro,Phone,PHO-151,922.48,104
+53,Samsung T7 SSD,Storage,STO-152,1320.07,188
+54,Apple Watch Series 10,Wearable,WEA-153,2863.76,26
+55,iPhone 15 Pro,Phone,PHO-154,2128.49,44
+56,Samsung T7 SSD,Storage,STO-155,326.3,130
+57,Sony Xperia 5 V,Phone,PHO-156,690.27,145
+58,iPhone 15 Pro,Phone,PHO-157,158.28,103
+59,AirPods Pro 3,Headphones,HEA-158,1238.85,12
+60,Apple Watch Series 10,Wearable,WEA-159,131.54,194
+61,Lenovo Tab P12 Pro,Tablet,TAB-160,1307.78,14
+62,Logitech MX Master 4,Accessory,ACC-161,1461.86,6
+63,Sennheiser Momentum 5,Headphones,HEA-162,1352.71,185
+64,WD Black SN850X,Storage,STO-163,780.68,97
+65,Seagate Barracuda 4TB,Storage,STO-164,869.04,96
+66,Garmin Fenix 8,Wearable,WEA-165,1997.9,141
+67,Sennheiser Momentum 5,Headphones,HEA-166,2368.02,44
+68,Dell XPS 13,Laptop,LAP-167,2018.09,88
+69,Seagate Barracuda 4TB,Storage,STO-168,2632.74,155
+70,Xiaomi 14 Pro,Phone,PHO-169,1779.01,28
+71,Seagate Barracuda 4TB,Storage,STO-170,773.25,56
+72,OnePlus 12,Phone,PHO-171,2897.7,92
+73,WD Black SN850X,Storage,STO-172,2014.95,6
+74,Xiaomi 14 Pro,Phone,PHO-173,434.47,153
+75,iPad Pro 12.9,Tablet,TAB-174,902.46,117
+76,iPad Pro 12.9,Tablet,TAB-175,2755.1,178
+77,Lenovo Tab P12 Pro,Tablet,TAB-176,2922.29,67
+78,AirPods Pro 3,Headphones,HEA-177,2684.02,172
+79,Samsung Galaxy Watch 7,Wearable,WEA-178,394.21,28
+80,Corsair K100 RGB,Accessory,ACC-179,1256.04,190
+81,Apple Watch Series 10,Wearable,WEA-180,2565.45,103
+82,Samsung T7 SSD,Storage,STO-181,2489.62,151
+83,iPad Pro 12.9,Tablet,TAB-182,1704.58,11
+84,Corsair K100 RGB,Accessory,ACC-183,2623.75,124
+85,Apple Watch Series 10,Wearable,WEA-184,1292.18,163
+86,Samsung T7 SSD,Storage,STO-185,2922.7,132
+87,Sennheiser Momentum 5,Headphones,HEA-186,2205.92,113
+88,Dell XPS 13,Laptop,LAP-187,2616.67,71
+89,AirPods Pro 3,Headphones,HEA-188,1201.38,10
+90,ASUS ROG Zephyrus G14,Laptop,LAP-189,1325.42,20
+91,Samsung Galaxy Watch 7,Wearable,WEA-190,664.23,59
+92,Acer Swift 5,Laptop,LAP-191,1122.87,190
+93,Samsung Galaxy S24 Ultra,Phone,PHO-192,724.62,168
+94,Sennheiser Momentum 5,Headphones,HEA-193,2602.48,107
+95,Samsung Galaxy Tab S9,Tablet,TAB-194,1468.93,78
+96,Lenovo Tab P12 Pro,Tablet,TAB-195,341.08,83
+97,Samsung Galaxy Tab S9,Tablet,TAB-196,1732.06,8
+98,WD Black SN850X,Storage,STO-197,1264.41,188
+99,iPad Pro 12.9,Tablet,TAB-198,2639.8,87
+100,Sony Xperia 5 V,Phone,PHO-199,1441.64,134

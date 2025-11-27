@@ -13,7 +13,23 @@ app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
-CSV_FILE = "static/ComputerSales.csv"
+CSV_FILE = "static/tech_products.csv"
+
+#26/11/2025 -> tomorrow im going to create a new route which will actually instead just validate the order instead of having one function do all this
+#create a route called something like /admin/validate_order
+#it will use get requests and then with my javascript it will use fetch and instead of post, this time it will use method=get
+#so my create_order function will be used to do the backend checks of the order and ensure no spam can get through, frontend will only handle the UX doing simple checks to make sure
+#that everything seems ok to the user
+
+#27/11/2025 -> I understand the general flow of how it is meant to be now, to handle any order errors with js and flask:
+#> User submits form
+#> js intercepts and basically pauses everything with preventDefault()
+#> js does all the normal checks with verify_order
+#> if its all good, then it will submit the form with a POST request to create_order
+#> if not it will show the error messages and never submit it to create_order
+#> it took me like 30 mins to understand this
+
+
 
 
 
@@ -101,10 +117,18 @@ def manage_admins():
     username = getattr(current_user, "username")
     return render_template("HTML/admin_manager.html", user_and_role=user_and_role, logged_in_as=username)
 
-@app.route("/admin/create_order", methods=["POST", "GET"])
+@app.route("/admin/create_order", methods=['POST', 'GET'])
 @login_required
 @admin_required
-def generate_invoice():
+def create_order():
+    total = "N/A"
+    order = {'customer_name' : '', 
+                'customer_address' : '', 
+                'order_date' : '',
+                'order_status' : '',
+                'product_type' : '',
+                'product_id' : '',
+                'quantity_ordered' : ''}
     if request.method == "POST":
         order = {'customer_name' : request.form['c_name'], 
                  'customer_address' : request.form['c_address'], 
@@ -112,10 +136,26 @@ def generate_invoice():
                  'order_status' : request.form['status'],
                  'product_type' : request.form['p_type'],
                  'product_id' : request.form['p_id'],
-                 'quantity_ordered' : request.form['q_ordered'],
-                 'subtotal' : request.form['subtotal']}
-        print(order)
-    return render_template("HTML/create-order.html")
+                 'quantity_ordered' : request.form['q_ordered']}
+        helpers_order = helpers.CreateOrder(order, CSV_FILE)
+        
+        if helpers_order.verify_order_validity(order['product_type'], order['product_id']):
+            print("should of passed again?")
+            if helpers_order.verify_stock(order['quantity_ordered'], order['product_id']):
+                print("should of passed")
+                temp_total = helpers_order.calculate_total(order['quantity_ordered'], order['product_id'])
+                if temp_total:
+                    total = temp_total
+                return render_template("HTML/create-order.html", total=total, order=order)
+
+
+    return render_template("HTML/create-order.html", total=total, order=order)
+
+@app.route("/admin/verify_order", methods=['GET'])
+@login_required
+@admin_required
+def verify_order():
+    pass
     
 
 @app.route('/products', methods=['GET', 'POST'])
@@ -125,11 +165,15 @@ def products_page():
     if request.method == "POST":
         filter_option = request.form['filter']
         search_option = request.form['search']
-        searched = helpers.searching(CSV_FILE, search_option)
-        if searched:
-            return render_template("HTML/products.html", products=searched[0])
+        print(filter_option, search_option)
         filtered = helpers.sort_data(CSV_FILE, filter_option)
-        return render_template("HTML/products.html", products=filtered) 
+        searched_with_filter = helpers.search_and_filter(CSV_FILE, search_option, filter_option)
+        if searched_with_filter:
+            print("User is searching and filtering")
+            return render_template("HTML/products.html", products=searched_with_filter[0])
+        else:
+            print("user only searced with filter")
+            return render_template("HTML/products.html", products=filtered) 
     return render_template("HTML/products.html", products=products)
 
 

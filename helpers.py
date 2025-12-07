@@ -5,7 +5,7 @@ import duckdb
 from functools import wraps
 from flask_login import current_user, UserMixin
 from flask import abort
-from datetime import datetime
+from datetime import datetime, date
 
 class User(UserMixin):
     def __init__(self, id, username, role):
@@ -52,37 +52,90 @@ class ManageAdmins():
         pass
 
 class CreateOrder():
-    def __init__(self, order, CSV_FILE):
+    def __init__(self, CSV_FILE, order=None, order_frontend=None):
         self.order = order
         self.CSV_FILE = CSV_FILE
         self.VAT = 1.2
+        self.order_frontend = order_frontend
+
+
+    def verify_frontend(self):
+        for _, value in self.order_frontend.items():
+            if value.strip() == "":
+                return {"error_with" : "Missing field/s!"}
+        
+            
+        if int(self.order_frontend["qty"]) <= 0:
+            return {"error_with" : "Quantity cannot be less than or equal to 0!"}
+        else:
+            query = f"SELECT SKU, Category, Stock FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ? AND Category = ?"
+            request = duckdb.execute(query, [self.order_frontend['sku'], self.order_frontend['type']]).df().to_dict("records")
+            if not request:
+                return {"error_with" : "Orders' SKU code does not match the type of the product!"}
+            elif request[0]['Stock'] < int(self.order_frontend["qty"]):
+                return {"error_with" : "The ordered quantity is greater than what is available!"}
+            
+        date_of_order = datetime.strptime(self.order_frontend['date'], '%Y-%m-%d').date()
+        todays_date = date.today()
+
+
+        if date_of_order < todays_date:
+            return {"error_with" : "Order cannot be placed in the past!"}
+        return True
+    
+    
 
 
     def verify_order_validity(self, product_type, SKU_code):
         if self.order['quantity_ordered']:
             if int(self.order['quantity_ordered']) != 0:
-                query = f"SELECT SKU, Category FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ? AND Category = ?"
+                query = f"SELECT SKU, Category, Stock FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ? AND Category = ?"
                 request = duckdb.execute(query, [SKU_code, product_type]).df().to_dict("records")
                 if not request:
-                    return {"error" : "Orders' SKU code does not match the type of the product!"}, False
+                    return False
+                elif request[0]['Stock'] < int(self.order['quantity_ordered']):
+                    return False
                 for _, value in self.order.items():
                     if value.strip() == "":
-                        return {"error" : "Missing field/s!"}, False
+                        return False
                     
-                date_of_order = datetime.strptime(self.order['order_date'], '%Y-%m-%d').strftime('%d/%m/%Y')
-                todays_date = datetime.today().strftime('%d/%m/%Y')
+                date_of_order = datetime.strptime(self.order['order_date'], '%Y-%m-%d').date()
+                todays_date = date.today()
 
                 if date_of_order < todays_date:
-                    return {"error" : "Order cannot be placed in the past!"}, False
+                    return False
                 return True
-        return {"error" : "Quantity ordered cannot be empty!"}, False
+        return False
         
         
 
 
-    def add_order_to_db(self, order):
-        with sqlite3.connect("databases/orders.db") as orders:
-            cursor = orders.cursor()
+    def add_order_to_db(self, total):
+        if self.order['order_status'] == "Completed":
+            #first if the business hasn't been already created, insert it, otherwise, just add it normally
+            with sqlite3.connect("databases/manage_orders.db") as orders:
+                cursor = orders.cursor()
+                cursor.execute("SELECT business_id FROM business WHERE business_name = ?", (self.order['customer_name'],))
+                valid_business_id = cursor.fetchone()
+                if valid_business_id:
+                    #handle orders with existing businesses
+                    pass
+                else:
+                    cursor.execute("INSERT INTO business(business_name, business_address) VALUES(?, ?)", (self.order['customer_name'], self.order['customer_address'], ))
+                    customer_business_id = cursor.lastrowid
+                    cursor.execute("INSERT INTO orders(business_id, order_date, product_id, order_quantity, status, total) VALUES(?, ?, ?, ?, ?, ?)", 
+                                   (customer_business_id, 
+                                    self.order['order_date'], 
+                                    self.order['product_id'], 
+                                    self.order['quantity_ordered'], 
+                                    self.order['order_status'], 
+                                    total, ))
+                    customer_order_id = cursor.lastrowid
+                    cursor.execute("INSERT INTO invoices(order_id, date_fulfilled, subtotal, VAT) VALUES(?, ? , ?, ?)", (customer_order_id, datetime.today().strftime('%Y-%m-%d'), self.subtotal, 20), )
+                    
+
+        else:
+            #handle orders with uncompleted payments
             pass
             
 
@@ -92,15 +145,15 @@ class CreateOrder():
         if request:
             if request[0]['Stock'] < int(order_qty):
                 return {"error" : "Current order of stock exceeds available stock!"}, False
-        return True
+        return {"error" : False}
         
 
     def calculate_total(self, qty_ordered, SKU_code):
         query = f"SELECT Price FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ?"
         request = duckdb.execute(query, [SKU_code]).df().to_dict("records")
         if request:
-            subtotal = float(request[0]['Price']) * int(qty_ordered)
-            total = subtotal * self.VAT
+            self.subtotal = float(request[0]['Price']) * int(qty_ordered)
+            total = self.subtotal * self.VAT
             return round(total, 2)
 
 

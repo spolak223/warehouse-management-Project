@@ -15,19 +15,20 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 CSV_FILE = "static/tech_products.csv"
 
-#26/11/2025 -> tomorrow im going to create a new route which will actually instead just validate the order instead of having one function do all this
-#create a route called something like /admin/validate_order
-#it will use get requests and then with my javascript it will use fetch and instead of post, this time it will use method=get
-#so my create_order function will be used to do the backend checks of the order and ensure no spam can get through, frontend will only handle the UX doing simple checks to make sure
-#that everything seems ok to the user
+#sorted mate
+#now i got a bigger fish to fry
+#for the next couple of sessions:
+#going to create 3 different databases -> Business, Order, Invoice
+#Business is going to have one to many with orders, but order to invoice will be one to one as each order can only have 1 invoice
+#next, going to need to add some sort of edit orders page where if the order is pending and then it is "paid" then itll add the invoice to the invoices database
+#however, if it is refunded im going to keep the invoice with the order, but just change the status to "refunded", so im going to remove the refund option from the create order
+#because what the hell i just realised that makes no sense in the first place???? how can you make a refunded order?
+#for myself later so i dont forget:
+#business id will be the foreign key in orders
+#need to make a unique primary key id for orders
+#orders primary key will be foreign key in invoice.
+#that flow should work correctly
 
-#27/11/2025 -> I understand the general flow of how it is meant to be now, to handle any order errors with js and flask:
-#> User submits form
-#> js intercepts and basically pauses everything with preventDefault()
-#> js does all the normal checks with verify_order
-#> if its all good, then it will submit the form with a POST request to create_order
-#> if not it will show the error messages and never submit it to create_order
-#> it took me like 30 mins to understand this
 
 
 
@@ -137,15 +138,14 @@ def create_order():
                  'product_type' : request.form['p_type'],
                  'product_id' : request.form['p_id'],
                  'quantity_ordered' : request.form['q_ordered']}
-        helpers_order = helpers.CreateOrder(order, CSV_FILE)
+        helpers_order = helpers.CreateOrder(CSV_FILE, order)
         
         if helpers_order.verify_order_validity(order['product_type'], order['product_id']):
-            print("should of passed again?")
             if helpers_order.verify_stock(order['quantity_ordered'], order['product_id']):
-                print("should of passed")
                 temp_total = helpers_order.calculate_total(order['quantity_ordered'], order['product_id'])
                 if temp_total:
                     total = temp_total
+                    helpers_order.add_order_to_db(total)
                 return render_template("HTML/create-order.html", total=total, order=order)
 
 
@@ -155,7 +155,25 @@ def create_order():
 @login_required
 @admin_required
 def verify_order():
-    pass
+    product_id = request.args.get("sku")
+    order_qty = request.args.get("qty")
+    order_type = request.args.get("type")
+    order_date = request.args.get("date")
+    order = {"sku" : product_id,
+             "qty" : order_qty,
+             "type" : order_type,
+             "date" : order_date}
+    verify_order_helpers = helpers.CreateOrder(CSV_FILE, None, order)
+    check_frontend = verify_order_helpers.verify_frontend()
+    if check_frontend == True:
+        return jsonify({
+            "ok" : True
+        }), 201
+    else:
+        return jsonify({
+            "ok" : False,
+            "fieldErrors" : {"error" : check_frontend['error_with']}
+        })
     
 
 @app.route('/products', methods=['GET', 'POST'])

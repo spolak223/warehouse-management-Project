@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
     <head>
-
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="{{ url_for('static', filename='main.js') }}" defer></script>
     </head>
     <body>
         <h1>Order Creator</h1>
         <h3>Please enter in the order details</h3>
         <h4>This will be used to auto-generate an invoice</h4>
 
-        <form method="POST" action="/admin/create_order" id="custromer_order">
+        <form method="POST" action="/admin/create_order" id="customer_order">
             <p>Customer Name</p>
             <input type="text" placeholder="Enter here" id="c_name" name="c_name" value="{{order.customer_name}}">
 
@@ -22,12 +23,7 @@
                 <label for="status">Status</label><br><br>
                 <select name="status" id="status">
                     <option {%if order.order_status == "Awaiting-Payment" %}selected{%endif%}>
-                        
-                        
                         Awaiting Payment
-                    </option>
-                    <option {%if order.order_status == "Refund" %}selected{%endif%}>
-                        Refund
                     </option>
                     <option {%if order.order_status == "Completed" %}selected{%endif%}>
                         Completed

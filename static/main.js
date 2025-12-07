@@ -274,22 +274,57 @@ function ErrorHandlerAdmins(error_msg, duration_ms) {
 
 }
 
-function ErrorHandlerOrders(){
+function ErrorHandlerOrders(error_message){
     const error_box = document.getElementById("error_box")
+    error_box.style.color = "red";
+    error_box.innerHTML = error_message;
+
+    setTimeout(() => {
+        error_box.innerHTML = "";
+
+    }, 2000)
 
 }
 
-if (window.location.pathname.endsWith("/admin/verify_order")) {
-    verify_user_order() 
-
+if (window.location.pathname.includes("/admin/create_order")) { 
+    const customer_form = document.getElementById("customer_order")
+    if (customer_form) {
+        customer_form.addEventListener("submit", handle_get_order)
+    }
 }
 
-function verify_user_order() {
-    $(document).ready(function(){
-        let customer_order = document.getElementById("customer_order")
-        console.log(customer_order)
 
+
+async function handle_get_order(event) {
+    console.log("here!")
+    event.preventDefault()
+    let form = document.getElementById("customer_order")
+    let customer_order = new FormData(form)
+
+    let sku = customer_order.get("p_id")
+    let order_qty = customer_order.get("q_ordered")
+    let product_type = customer_order.get("p_type") 
+    let order_date = customer_order.get("o_date")
+
+    let main_url = "/admin/verify_order"
+    let url = main_url + "?sku=" + encodeURIComponent(sku) + "&qty=" + encodeURIComponent(order_qty) + "&type=" + encodeURIComponent(product_type) + "&date=" + encodeURIComponent(order_date)
+    
+    const res = await fetch(url, {
+        method : "GET"
     })
+    const data = await res.json()
+    console.log(data)
+    if (data.ok) { 
+        console.log("Nope all good!")
+        form.submit()
+    } else {
+        console.log("ERRROR!")
+        ErrorHandlerOrders(data.fieldErrors.error) 
+
+    }
+
+    
+
 }
 
 

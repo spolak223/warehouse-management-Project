@@ -55,6 +55,22 @@ table {
     width : 20%;
 }
 
+.center-image { 
+    clear: both;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+
+}
+
+.center-image img { 
+    display: block;
+    max-width: 40%;
+}
+
+
 @media print { 
     body { 
         background: None;

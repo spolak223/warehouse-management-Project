@@ -2,7 +2,7 @@ import sqlite3
 
 #once databases have been created, feel free to comment out the ones you don't need
 
-with sqlite3.connect("logins.db") as conn:
+with sqlite3.connect("databases/logins.db") as conn:
     cursor = conn.cursor()
     cursor.execute("" \
     "CREATE TABLE IF NOT EXISTS login_deets(" \

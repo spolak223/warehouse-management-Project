@@ -170,11 +170,8 @@ def verify_order():
 @login_required
 @admin_required
 def orders_and_invoices_editor():
-    #this is the way I'm going to want to display order addresses
     orders_invoice_helper = helpers.CreateOrder(None, None, None)
     o_and_i = orders_invoice_helper.display_businesses()
-    #test = orders_invoice_helper.add_business_details()
-    #print(test)
 
 
     return render_template("HTML/order_invoice_mnger.html", data=o_and_i)
@@ -183,21 +180,38 @@ def orders_and_invoices_editor():
 @login_required
 @admin_required
 def view_order(business_id):
-    helper_class = helpers.CreateOrder(None, None, None)
+    helper_class = helpers.CreateOrder(CSV_FILE, None, None)
     business_details = helper_class.add_business_details(business_id)
+    order_id = business_details[0]
     business_address = business_details[2]
     address_helper = helper_class.manage_address(business_address)
-    print(address_helper)
     
-    order_details = {"order_id" : business_details[0],
+    order_details = {"order_id" : order_id,
                      "business_name" : business_details[1],
-                     "num_and_street" : None,
-                     "city" : None,
+                     "num_and_street" : address_helper[0],
+                     "city" : address_helper[1],
+                     "county" : address_helper[2],
+                     "postcode" : address_helper[3],
                      "order_date" : business_details[3]}
     
+    product_helper = helper_class.manage_product(order_id)
+
+    product_details = {
+        "product_id" : product_helper[0][0],
+        "description" : product_helper[1][0]['Name'],
+        "quantity" : product_helper[0][1]
+    }
+    name_order_id = business_details[1] + str(order_id)
+    barcode_name = helper_class.create_barcode(name_order_id)
+    barcode_url = url_for("static", filename=barcode_name)
+    print(barcode_name)
+
+    
+
+    
 
 
-    return render_template("HTML/pick_note.html", order_details = order_details)
+    return render_template("HTML/pick_note.html", order_details = order_details, product_details=product_details, barcode=barcode_url)
     
 
 @app.route('/products', methods=['GET', 'POST'])

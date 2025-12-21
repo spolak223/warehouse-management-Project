@@ -6,6 +6,8 @@ from functools import wraps
 from flask_login import current_user, UserMixin
 from flask import abort
 from datetime import datetime, date, timedelta
+import barcode
+from barcode.writer import ImageWriter
 
 class User(UserMixin):
     def __init__(self, id, username, role):
@@ -228,13 +230,37 @@ class CreateOrder():
     def manage_address(self, business_address):
         result = business_address.split(", ")
         count = 0
-        order = {}
+        order = {0: "", 1:"", 2:"", 3:""}
         while count < len(result):
             order[count] = result[count]
             count += 1
-
-
         return order
+    
+    def manage_product(self, order_id):
+        with sqlite3.connect("databases/manage_orders.db") as order:
+            cursor = order.cursor()
+            cursor.execute("SELECT orders.product_id, orders.order_quantity FROM orders WHERE orders.order_id = ?", (str(order_id)), )
+            id_and_qty = cursor.fetchone()
+            SKU, _ = id_and_qty
+
+        
+        query = f"SELECT Name FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ?"
+        request = duckdb.execute(query, [SKU]).df().to_dict("records")
+
+        return id_and_qty, request
+    
+    def create_barcode(self, name_order):
+        my_barcode = barcode.get('code39', name_order, writer=ImageWriter())
+        file_name_and_location = f"static/barcodes/{name_order}"
+        my_barcode.save(file_name_and_location)
+        file_name = f"barcodes/{name_order}.png"
+        return file_name
+
+        
+
+        
+        
+
         
 
 

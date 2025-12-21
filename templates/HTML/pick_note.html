@@ -5,7 +5,6 @@
     </head>
 
     <body>
-        <button>print</button>
         <div class="page">
             <h1>Order Note</h1>
             <p>{{order_details.order_date}}</p>
@@ -20,7 +19,8 @@
                     <p><b>Business Address</b></p>
                         <p>{{order_details.num_and_street}}</p>
                         <p>{{order_details.city}}</p>
-                        <p></p>
+                        <p>{{order_details.county}}</p>
+                        <p>{{order_details.postcode}}</p>
                 </div>
 
                 <div id="user_company_details">
@@ -31,14 +31,20 @@
                 </div>
             </div>
             <hr id="break_line">
+            <div class="center-image">
+                <h2>Customer Number</h2>
+                <img src="{{barcode}}" alt="Barcode image with company name and order ID">
+            </div>
+            
+            <hr id="break_line">
             <table>
                 <tr>
                     <th id="table_id">ID</th><th id="table_name">Product Name</th><th id="table_qty">Qty</th>
                 </tr>
                 <tr>
-                    <td>1</td>
-                    <td>Samsung Galaxy s25 Max</td>
-                    <td>15</td>
+                    <td>{{product_details.product_id}}</td>
+                    <td>{{product_details.description}}</td>
+                    <td>{{product_details.quantity}}</td>
                 </tr>
             </table>
                 

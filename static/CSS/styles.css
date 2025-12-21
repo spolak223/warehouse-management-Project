@@ -1,0 +1,74 @@
+html { 
+    font-family: 'Times New Roman', Times, serif;
+}
+
+table { 
+    table-layout: fixed;
+    width: 100%;
+    min-width: 1000px;
+    margin: 0 auto;
+    border-collapse: collapse;
+    text-align: center;
+    border: 1px solid #999999;
+}
+
+th, td { 
+    padding: 0.2cm;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid rgb(175, 175, 175);
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #eeeeee;
+}
+
+tbody tr:nth-child(even) { 
+    background-color: #999999;
+}
+
+tbody tr:hover { 
+    background-color: #d1f5f5;
+}
+
+tr.select > td { 
+    background-color: yellow;
+}
+
+#appoint-admin, #remove-admin {
+    border: none;
+    display: inline-block;
+    padding: 15px;
+    size: 15px;
+    transition: 0.3s ease;
+    color: white; 
+    
+}
+
+
+
+#appoint-admin {
+    background-color: #008000;
+    
+    
+}
+#appoint-admin:hover {
+    background: #015701;
+    
+     
+
+}
+
+#remove-admin { 
+    background-color: #ff0000;
+}
+
+#remove-admin:hover { 
+    background: #b50202;
+}
+
+
+
+
+

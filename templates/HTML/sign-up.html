@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="{{ url_for('static', filename='main.js') }}"></script>
+    </head>
+    <body>
+       <h1>Register</h1>
+       <form id="register-form">
+        <p>
+            <label for="username">
+                Username:
+            </label><br>
+            <input type="text" id="user" name="username">
+        </p>
+        <p>
+            <label for="password">
+                Password:
+            </label><br>
+            <input type="password" id="pass" name="password">
+        </p>
+        <p>
+            <label for="conf-password">
+                Confirm Password:
+            </label><br>
+            <input type="password" id="confirm-pass" name="conf-password">
+        </p>
+        <p>
+            <h3 id="error-box"></h3>
+        </p>
+        <button type="button" id="register-btn">Register</button>
+
+       </form>
+       
+       <p><a href="/login">Already have an account? Login here</a></p>
+    </body>
+</html>

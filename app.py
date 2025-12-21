@@ -15,19 +15,8 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 CSV_FILE = "static/tech_products.csv"
 
-#sorted mate
-#now i got a bigger fish to fry
-#for the next couple of sessions:
-#going to create 3 different databases -> Business, Order, Invoice
-#Business is going to have one to many with orders, but order to invoice will be one to one as each order can only have 1 invoice
-#next, going to need to add some sort of edit orders page where if the order is pending and then it is "paid" then itll add the invoice to the invoices database
-#however, if it is refunded im going to keep the invoice with the order, but just change the status to "refunded", so im going to remove the refund option from the create order
-#because what the hell i just realised that makes no sense in the first place???? how can you make a refunded order?
-#for myself later so i dont forget:
-#business id will be the foreign key in orders
-#need to make a unique primary key id for orders
-#orders primary key will be foreign key in invoice.
-#that flow should work correctly
+#done
+#next create a view orders and invoices page, then im going to need to give the admin user the option to edit it and etc.
 
 
 
@@ -139,6 +128,7 @@ def create_order():
                  'product_id' : request.form['p_id'],
                  'quantity_ordered' : request.form['q_ordered']}
         helpers_order = helpers.CreateOrder(CSV_FILE, order)
+        print(order)
         
         if helpers_order.verify_order_validity(order['product_type'], order['product_id']):
             if helpers_order.verify_stock(order['quantity_ordered'], order['product_id']):
@@ -174,6 +164,40 @@ def verify_order():
             "ok" : False,
             "fieldErrors" : {"error" : check_frontend['error_with']}
         })
+    
+
+@app.route("/admin/manage_order_invoice", methods=['POST', 'GET'])
+@login_required
+@admin_required
+def orders_and_invoices_editor():
+    #this is the way I'm going to want to display order addresses
+    orders_invoice_helper = helpers.CreateOrder(None, None, None)
+    o_and_i = orders_invoice_helper.display_businesses()
+    #test = orders_invoice_helper.add_business_details()
+    #print(test)
+
+
+    return render_template("HTML/order_invoice_mnger.html", data=o_and_i)
+
+@app.route("/admin/view_order/<int:business_id>", methods=['POST', 'GET'])
+@login_required
+@admin_required
+def view_order(business_id):
+    helper_class = helpers.CreateOrder(None, None, None)
+    business_details = helper_class.add_business_details(business_id)
+    business_address = business_details[2]
+    address_helper = helper_class.manage_address(business_address)
+    print(address_helper)
+    
+    order_details = {"order_id" : business_details[0],
+                     "business_name" : business_details[1],
+                     "num_and_street" : None,
+                     "city" : None,
+                     "order_date" : business_details[3]}
+    
+
+
+    return render_template("HTML/pick_note.html", order_details = order_details)
     
 
 @app.route('/products', methods=['GET', 'POST'])

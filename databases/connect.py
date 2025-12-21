@@ -1,5 +1,7 @@
 import sqlite3
 
+#once databases have been created, feel free to comment out the ones you don't need
+
 with sqlite3.connect("logins.db") as conn:
     cursor = conn.cursor()
     cursor.execute("" \
@@ -31,6 +33,7 @@ with sqlite3.connect("databases/manage_orders.db") as orders_DB:
     "order_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL," \
     "business_id INTEGER NOT NULL," \
     "order_date DATE," \
+    "deadline_date DATE," \
     "product_id TEXT NOT NULL," \
     "order_quantity INTEGER NOT NULL," \
     "status TEXT," \
@@ -45,6 +48,8 @@ with sqlite3.connect("databases/manage_orders.db") as invoices_db:
     cursor.execute("CREATE TABLE IF NOT EXISTS invoices(" \
     "invoice_id INTEGER PRIMARY KEY AUTOINCREMENT," \
     "order_id INTEGER UNIQUE NOT NULL," \
+    "issue_date DATE," \
+    "deadline_date DATE," \
     "date_fulfilled DATE," \
     "subtotal REAL NOT NULL," \
     "VAT INTEGER NOT NULL," \

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="{{url_for("static", filename="CSS/pick_styles.css")}}" rel="stylesheet"/>
+    </head>
+
+    <body>
+        <button>print</button>
+        <div class="page">
+            <h1>Order Note</h1>
+            <p>{{order_details.order_date}}</p>
+            <p>&nbsp;</p>
+            
+            
+            <div class="top_page">
+                <div id="company_details">
+                    <p><b>Order Number: {{order_details.order_id}}</b></p>
+                    <p><b>Business Name</b></p>
+                        {{order_details.business_name}}
+                    <p><b>Business Address</b></p>
+                        <p>{{order_details.num_and_street}}</p>
+                        <p>{{order_details.city}}</p>
+                        <p></p>
+                </div>
+
+                <div id="user_company_details">
+                    <p><b>My Company</b></p>
+                    <p><b>15 Something Way</b></p>
+                    <p><b>Location</b></p>
+                    <p>X21B NY2</p>
+                </div>
+            </div>
+            <hr id="break_line">
+            <table>
+                <tr>
+                    <th id="table_id">ID</th><th id="table_name">Product Name</th><th id="table_qty">Qty</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>Samsung Galaxy s25 Max</td>
+                    <td>15</td>
+                </tr>
+            </table>
+                
+
+
+
+
+        </div>
+        
+            
+
+    </body>
+</html>

@@ -5,7 +5,7 @@ import duckdb
 from functools import wraps
 from flask_login import current_user, UserMixin
 from flask import abort
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 class User(UserMixin):
     def __init__(self, id, username, role):
@@ -18,6 +18,7 @@ class ManageAdmins():
     def __init__(self, text):
         self.text = text
         self.user_and_role = self.text['user_and_role'].split()
+        
          
         
 
@@ -52,16 +53,19 @@ class ManageAdmins():
         pass
 
 class CreateOrder():
-    def __init__(self, CSV_FILE, order=None, order_frontend=None):
+    def __init__(self, CSV_FILE=None, order=None, order_frontend=None):
         self.order = order
         self.CSV_FILE = CSV_FILE
         self.VAT = 1.2
         self.order_frontend = order_frontend
+        if order:
+            self.deadline_date = datetime.strptime(self.order['order_date'], "%Y-%m-%d") + timedelta(days=3)
+            
 
 
     def verify_frontend(self):
         for _, value in self.order_frontend.items():
-            if value.strip() == "":
+            if value is None or value.strip() == "":
                 return {"error_with" : "Missing field/s!"}
         
             
@@ -111,32 +115,82 @@ class CreateOrder():
 
 
     def add_order_to_db(self, total):
-        if self.order['order_status'] == "Completed":
-            #first if the business hasn't been already created, insert it, otherwise, just add it normally
-            with sqlite3.connect("databases/manage_orders.db") as orders:
-                cursor = orders.cursor()
-                cursor.execute("SELECT business_id FROM business WHERE business_name = ?", (self.order['customer_name'],))
+        with sqlite3.connect("databases/manage_orders.db") as orders:
+            cursor = orders.cursor()
+            if self.order['order_status'] == "Completed":
+                    cursor.execute("SELECT business_id FROM business WHERE business_name = ? AND business_address = ?", (self.order['customer_name'], self.order['customer_address']))
+                    valid_business_id = cursor.fetchone()
+                    if valid_business_id:
+                        valid_business_id = valid_business_id[0]
+                        customer_order_id = self.create_order(cursor, total, valid_business_id)
+                        self.create_invoice(cursor, customer_order_id)
+                        cursor.close()
+                    else:
+                        #pass in create_new business function here
+                        customer_business_id = self.create_new_business(cursor)
+                        #then order function
+                        customer_order_id = self.create_order(cursor, total, customer_business_id)
+                        #then invoice function
+                        self.create_invoice(cursor, customer_order_id)
+                        cursor.close()
+            elif self.order['order_status'] == "Pending":
+                #no this will be used on a different page to edit the invoice and update the date of completion day
+                cursor.execute("SELECT business_id FROM business WHERE business_name = ? AND business_address = ?", (self.order['customer_name'], self.order['customer_address']))
                 valid_business_id = cursor.fetchone()
                 if valid_business_id:
-                    #handle orders with existing businesses
-                    pass
+                    valid_business_id = valid_business_id[0]
+                    customer_id = self.create_order(cursor, total, valid_business_id)
+                    self.create_invoice(cursor, customer_id)
+                    cursor.close()
                 else:
-                    cursor.execute("INSERT INTO business(business_name, business_address) VALUES(?, ?)", (self.order['customer_name'], self.order['customer_address'], ))
-                    customer_business_id = cursor.lastrowid
-                    cursor.execute("INSERT INTO orders(business_id, order_date, product_id, order_quantity, status, total) VALUES(?, ?, ?, ?, ?, ?)", 
-                                   (customer_business_id, 
-                                    self.order['order_date'], 
-                                    self.order['product_id'], 
-                                    self.order['quantity_ordered'], 
-                                    self.order['order_status'], 
-                                    total, ))
-                    customer_order_id = cursor.lastrowid
-                    cursor.execute("INSERT INTO invoices(order_id, date_fulfilled, subtotal, VAT) VALUES(?, ? , ?, ?)", (customer_order_id, datetime.today().strftime('%Y-%m-%d'), self.subtotal, 20), )
-                    
+                    business_id = self.create_new_business(cursor)
+                    customer_id = self.create_order(cursor, total, business_id)
+                    self.create_invoice(cursor, customer_id)
+                    cursor.close()
 
-        else:
-            #handle orders with uncompleted payments
-            pass
+                        
+
+            else:
+                #handle orders with uncompleted payments, only create order no invoice
+                cursor.execute("SELECT business_id FROM business WHERE business_name = ? AND business_address = ?", (self.order['customer_name'], self.order['customer_address']))
+                validate_id = cursor.fetchone()
+                if validate_id:
+                    validate_id = validate_id[0]
+                    self.create_order(cursor, total, validate_id)
+                    cursor.close()
+                else:
+                    customer_business_id = self.create_new_business(cursor)
+                    self.create_order(cursor, total, customer_business_id)
+                    cursor.close()
+        cursor.close()
+    
+    def create_new_business(self, cursor):
+        cursor.execute("INSERT INTO business(business_name, business_address) VALUES(?, ?)", (self.order['customer_name'], self.order['customer_address'], ))
+        return cursor.lastrowid
+
+    def create_order(self, cursor, total, customer_business_id):
+        
+        cursor.execute("INSERT INTO orders(business_id, order_date, deadline_date, product_id, order_quantity, status, total) VALUES(?, ?, ?, ?, ?, ?, ?)", 
+                        (customer_business_id, 
+                        self.order['order_date'],
+                        self.deadline_date, 
+                        self.order['product_id'], 
+                        self.order['quantity_ordered'], 
+                        self.order['order_status'], 
+                        total, ))
+        return cursor.lastrowid
+    
+    def create_invoice(self, cursor, customer_order_id):
+        if self.order['order_status'] == "Completed":
+            cursor.execute("INSERT INTO invoices(order_id, issue_date, date_fulfilled, subtotal, VAT) VALUES(?, ? , ?, ?, ?)", (customer_order_id, self.order['order_date'], datetime.today().strftime('%Y-%m-%d'),self.subtotal, 20), )
+        elif self.order['order_status'] == "Pending":
+            cursor.execute("INSERT INTO invoices(order_id, issue_date, date_fulfilled, deadline_date, subtotal, VAT) VALUES(?, ?, ?, ?, ?, ?)", (customer_order_id, self.order['order_date'], None, self.deadline_date, self.subtotal, 20), )
+    
+    
+
+    
+
+
             
 
     def verify_stock(self, order_qty, SKU_code):
@@ -155,6 +209,39 @@ class CreateOrder():
             self.subtotal = float(request[0]['Price']) * int(qty_ordered)
             total = self.subtotal * self.VAT
             return round(total, 2)
+    
+    def display_businesses(self):
+        with sqlite3.connect("databases/manage_orders.db") as order_invoice:
+            cursor = order_invoice.cursor()
+            cursor.execute("SELECT DISTINCT business.business_name, business.business_id FROM business INNER JOIN orders ON business.business_id = orders.business_id;")
+            self.business_details = cursor.fetchall()
+            return self.business_details
+    
+    def add_business_details(self, business_id):
+        print(type(business_id))
+        with sqlite3.connect("databases/manage_orders.db") as order:
+            cursor = order.cursor()
+            cursor.execute("SELECT orders.order_id, business.business_name, business.business_address, orders.order_date FROM business INNER JOIN orders ON business.business_id = orders.business_id WHERE business.business_id = ?", (str(business_id)), )
+            result = cursor.fetchone()
+        return result
+    
+    def manage_address(self, business_address):
+        result = business_address.split(", ")
+        count = 0
+        order = {}
+        while count < len(result):
+            order[count] = result[count]
+            count += 1
+
+
+        return order
+        
+
+
+
+                
+
+
 
 
 

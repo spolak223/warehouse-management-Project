@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="{{url_for("static", filename="CSS/styles.css")}}" rel="stylesheet"/>
+    </head>
+    <body>
+        <a href="/homepage/admin"><button><img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" height="50" width="50"></button></a>
+        <table>
+            <tr>
+               <th>Order Number</th><th>Action</th> 
+            </tr>
+            {%for ids in order_ids%}
+            <tr>
+                <td>{{ids[0]}}</td><td><a href="{{url_for('view_order', order_id=ids[0])}}">View Order</a></td>
+            </tr>
+            {%endfor%}
+        </table>
+    </body>
+</html>

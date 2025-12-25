@@ -128,15 +128,14 @@ class CreateOrder():
                         self.create_invoice(cursor, customer_order_id)
                         cursor.close()
                     else:
-                        #pass in create_new business function here
+
                         customer_business_id = self.create_new_business(cursor)
-                        #then order function
+                        
                         customer_order_id = self.create_order(cursor, total, customer_business_id)
-                        #then invoice function
+                        
                         self.create_invoice(cursor, customer_order_id)
                         cursor.close()
             elif self.order['order_status'] == "Pending":
-                #no this will be used on a different page to edit the invoice and update the date of completion day
                 cursor.execute("SELECT business_id FROM business WHERE business_name = ? AND business_address = ?", (self.order['customer_name'], self.order['customer_address']))
                 valid_business_id = cursor.fetchone()
                 if valid_business_id:
@@ -186,7 +185,7 @@ class CreateOrder():
         if self.order['order_status'] == "Completed":
             cursor.execute("INSERT INTO invoices(order_id, issue_date, date_fulfilled, subtotal, VAT) VALUES(?, ? , ?, ?, ?)", (customer_order_id, self.order['order_date'], datetime.today().strftime('%Y-%m-%d'),self.subtotal, 20), )
         elif self.order['order_status'] == "Pending":
-            cursor.execute("INSERT INTO invoices(order_id, issue_date, date_fulfilled, deadline_date, subtotal, VAT) VALUES(?, ?, ?, ?, ?, ?)", (customer_order_id, self.order['order_date'], None, self.deadline_date, self.subtotal, 20), )
+            cursor.execute("INSERT INTO invoices(order_id, issue_date, date_fulfilled, subtotal, VAT) VALUES(?, ?, ?, ?, ?)", (customer_order_id, self.order['order_date'], None, self.subtotal, 20), )
     
     
 
@@ -209,6 +208,7 @@ class CreateOrder():
         request = duckdb.execute(query, [SKU_code]).df().to_dict("records")
         if request:
             self.subtotal = float(request[0]['Price']) * int(qty_ordered)
+            self.subtotal = round(self.subtotal, 2)
             total = self.subtotal * self.VAT
             return round(total, 2)
     
@@ -219,11 +219,10 @@ class CreateOrder():
             self.business_details = cursor.fetchall()
             return self.business_details
     
-    def add_business_details(self, business_id):
-        print(type(business_id))
+    def add_business_details(self, order_id):
         with sqlite3.connect("databases/manage_orders.db") as order:
             cursor = order.cursor()
-            cursor.execute("SELECT orders.order_id, business.business_name, business.business_address, orders.order_date FROM business INNER JOIN orders ON business.business_id = orders.business_id WHERE business.business_id = ?", (str(business_id)), )
+            cursor.execute("SELECT orders.order_id, business.business_name, business.business_address, orders.order_date FROM orders INNER JOIN business ON orders.business_id = business.business_id WHERE orders.order_id = ?", (str(order_id)))
             result = cursor.fetchone()
         return result
     
@@ -255,6 +254,118 @@ class CreateOrder():
         my_barcode.save(file_name_and_location)
         file_name = f"barcodes/{name_order}.png"
         return file_name
+    
+    def view_all_orders(self, business_id):
+        with sqlite3.connect("databases/manage_orders.db") as db:
+            cursor = db.cursor()
+            cursor.execute("SELECT order_id FROM orders WHERE orders.business_id = ?", (str(business_id)), )
+            result = cursor.fetchall()
+        return result
+
+    def view_all_invoices(self, business_id):
+        with sqlite3.connect("databases/manage_orders.db") as db:
+            cursor = db.cursor()
+            cursor.execute("SELECT invoices.order_id FROM invoices INNER JOIN orders ON invoices.order_id = orders.order_id WHERE orders.business_id = ?", (str(business_id)), )
+            result = cursor.fetchall()
+        return result
+    
+    def view_invoice(self, order_id):
+        with sqlite3.connect("databases/manage_orders.db") as invoice:
+            cursor = invoice.cursor()
+            cursor.execute("SELECT orders.status FROM orders WHERE orders.order_id = ?", (str(order_id)), )
+            status = cursor.fetchone()
+            if status[0] != "Awaiting Payment":
+                cursor.execute("SELECT invoices.invoice_id, invoices.date_fulfilled, invoices.VAT, orders.order_date, orders.deadline_date FROM invoices INNER JOIN orders ON invoices.order_id = orders.order_id WHERE invoices.order_id = ?", (str(order_id)),) 
+                result = cursor.fetchone()
+                print(result)
+                invoice_id, fulfilled, VAT, order_date, deadline = result
+                temp_time = datetime.strptime(deadline, "%Y-%m-%d %H:%M:%S")
+                deadline_result = temp_time.strftime("%d/%m/%Y")
+                temp_order_time = datetime.strptime(order_date, "%Y-%m-%d")
+                order_time_result = temp_order_time.strftime("%d/%m/%Y")
+                print(invoice_id, fulfilled, VAT, order_time_result, deadline_result)
+                    
+                return invoice_id, fulfilled, VAT, order_time_result, deadline_result   
+            else:
+                return "No invoice"
+    
+    def invoice_payments(self, order_id):
+        with sqlite3.connect("databases/manage_orders.db") as invoice:
+            cursor = invoice.cursor()
+            cursor.execute("SELECT invoices.subtotal, orders.total FROM invoices INNER JOIN orders ON invoices.order_id = orders.order_id WHERE orders.order_id = ?", (str(order_id)), )
+            result = cursor.fetchone()
+            subtotal, total = result
+        
+        return subtotal, total
+    
+    def product_details(self, order_id):
+        with sqlite3.connect("databases/manage_orders.db") as invoice:
+            cursor = invoice.cursor()
+            cursor.execute("SELECT orders.order_quantity, orders.product_id FROM orders WHERE orders.order_id = ?", (str(order_id)), )
+            result = cursor.fetchone()
+            qty, product_id = result
+            query = f"SELECT Name, Price FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ?"
+            request = duckdb.execute(query, [product_id]).df().to_dict("records")
+            name = request[0]['Name']
+            price = request[0]['Price']
+        return name, price, qty
+    
+    def invoice_business_details(self, order_id):
+        with sqlite3.connect("databases/manage_orders.db") as business:
+            cursor = business.cursor()
+            cursor.execute("SELECT business.business_name, business.business_id FROM business INNER JOIN orders ON orders.business_id = business.business_id WHERE orders.order_id = ?", (str(order_id)), )
+            name, b_id = cursor.fetchone()
+        return name, b_id
+    
+    def display_pending_business(self):
+        with sqlite3.connect("databases/manage_orders.db") as business:
+            cursor = business.cursor()
+            cursor.execute("SELECT DISTINCT business.business_name, business.business_id FROM business INNER JOIN orders ON business.business_id = orders.business_id WHERE orders.status = ? OR orders.status = ?", ("Pending", "Awaiting Payment", ) )
+            result = cursor.fetchall()
+        return result
+    
+    def pending_business_details(self, business_id):
+        with sqlite3.connect("databases/manage_orders.db") as order:
+            cursor = order.cursor()
+            cursor.execute("SELECT business.business_name, business.business_address, orders.order_id, orders.status FROM orders INNER JOIN business ON orders.business_id = business.business_id WHERE business.business_id = ?", (str(business_id), ))
+            result = cursor.fetchone()
+        return result
+    
+    def change_status(self, order_id, status):
+        with sqlite3.connect("databases/manage_orders.db") as order:
+            cursor = order.cursor()
+            temp_today = date.today()
+            today = temp_today.strftime("%Y-%m-%d")
+            try:
+                if status == "Completed":
+                    cursor.execute("UPDATE orders SET status = 'Completed' WHERE order_id = ?", (str(order_id)), )
+                    cursor.execute("SELECT invoice_id FROM invoices WHERE order_id = ?", (str(order_id)), )
+                    invoice_result = cursor.fetchone()
+                    if invoice_result:
+                        cursor.execute("UPDATE invoices SET date_fulfilled = ? WHERE order_id = ?", (today, str(order_id)), )
+                    else:
+                        cursor.execute("SELECT order_date, total FROM orders WHERE order_id = ?", (str(order_id)), )
+                        result = cursor.fetchone()
+                        order_date = result[0]
+                        total = result[1]
+                        subtotal = round(total / self.VAT, 2)
+                        cursor.execute("INSERT INTO invoices(order_id, issue_date, date_fulfilled, subtotal, VAT) VALUES(?, ?, ?, ?, ?)", (str(order_id), order_date, today, subtotal, 20))
+                elif status == "Pending":
+                    cursor.execute("UPDATE orders SET status = 'Pending' WHERE order_id = ?", (str(order_id)), )
+                    cursor.execute("SELECT order_date, total FROM orders WHERE order_id = ?", (str(order_id)), )
+                    pending_result = cursor.fetchone()
+                    order_date = pending_result[0]
+                    print(order_date)
+                    total = pending_result[1]
+                    subtotal = round(total / self.VAT, 2)
+                    cursor.execute("INSERT INTO invoices(order_id, issue_date, date_fulfilled, subtotal, VAT) VALUES(?, ?, ?, ?, ?)", (str(order_id),order_date,  None, subtotal, 20))
+                    
+
+            except Exception as e:
+                order.rollback()
+                return f"Error: {e}"
+        return "successful"
+        
 
         
 

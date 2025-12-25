@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="{{url_for("static", filename="CSS/invoice_styles.css")}}" rel="stylesheet"/>
+
+    </head>
+    <body>
+        
+        <div class="page">
+            <h1>Invoice</h1>
+            <p>&nbsp;</p>
+            <div class="top_page">
+                <div class="invoice_details">
+                    
+                    <p>Date : <b>{{invoice_deets.o_date}}</b></p>
+                    <p>Invoice No. <b>{{invoice_deets.i_id}}</b></p>
+                </div>
+                
+                <div class="company_details">
+                    <p><b>For</b></p>
+                    <p>{{business_deets.business_name}}</p>
+                    <p>Business No. <b>{{business_deets.business_number}}</b></p>
+                </div>
+            
+
+            </div>
+            <hr>
+            <h2>Description</h2>
+            <p>&nbsp;</p>
+            <table class="description">
+                <tr>
+                    <td><p>Order Deadline</p></td>
+                    <td><b>{{invoice_deets.d_date}}</b></td>
+                </tr>
+                <tr>
+                    <td><p>Payment Due</p></td>
+                    <td><b>{{invoice_deets.o_date}}</b></td>
+
+                </tr>
+                <tr>
+                    <td><p>Delivery Method</p></td>
+                    <td><b>1st Class Royal Mail</b></td>
+                </tr>
+            </table>
+            <table class="products_table">
+                <tr id="product_rows">
+                    <th>Product Name</th><th>Price</th><th>Qty</th>
+                </tr>
+                <tr>
+                    <td>{{order_deets.Name}}</td><td>£{{order_deets.Price}}</td><td>{{order_deets.Qty}}</td>
+                </tr>
+            </table>
+            <div id="prices">
+                <p><b>Subtotal:</b> £{{payment_deets.subtotal}}</p>
+                <p><b>VAT:</b> 20%</p>
+                <p><b>Total:</b> £{{payment_deets.total}}</p>
+            </div>
+            <hr>
+            
+                
+            
+
+
+
+        </div>
+
+    </body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="{{url_for("static", filename="CSS/styles.css")}}" rel="stylesheet"/>
+
+    </head>
+    <body>
+        <a href="/homepage/admin"><button><img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" height="50" width="50"></button></a>
+        <h1>Edit the status of Pending / Awaiting Orders!</h1>
+
+        <table>
+            <tr>
+                <th>Business Name</th><th>Actions</th>
+            </tr>
+            {%for business in business_details%}
+                <tr>
+                    <td>Business Name: {{business[0].title()}}<br>Business ID: {{business[1]}}</td>
+                    <td><a href="{{url_for('edit_order', business_id=business[1])}}">Edit Order</a></td>
+                </tr>
+            {%endfor%}
+        </table>
+    </body>
+</html>

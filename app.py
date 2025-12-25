@@ -15,14 +15,6 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 CSV_FILE = "static/tech_products.csv"
 
-#done
-#next create a view orders and invoices page, then im going to need to give the admin user the option to edit it and etc.
-
-
-
-
-
-
 @login_manager.user_loader
 def load_user(user_id):
     with sqlite3.connect("databases/logins.db") as db:
@@ -176,13 +168,30 @@ def orders_and_invoices_editor():
 
     return render_template("HTML/order_invoice_mnger.html", data=o_and_i)
 
-@app.route("/admin/view_order/<int:business_id>", methods=['POST', 'GET'])
+@app.route("/admin/view_orders_dash/<int:business_id>", methods=['POST', 'GET'])
+@admin_required
+@login_required
+def view_businesses_orders(business_id):
+    helpers_class = helpers.CreateOrder(None, None, None)
+    order_ids = helpers_class.view_all_orders(business_id)
+    
+    return render_template("HTML/view_all_orders.html", order_ids = order_ids, temp_business_id = business_id)
+
+@app.route("/admin/view_invoices_dash/<int:business_id>", methods=['POST', 'GET'])
+@admin_required
+@login_required
+def view_businesses_invoices(business_id):
+    helper_class = helpers.CreateOrder(None, None, None)
+    invoice_ids = helper_class.view_all_invoices(business_id)
+
+    return render_template("HTML/view_all_invoices.html", order_ids = invoice_ids, temp_business_id = business_id)
+
+@app.route("/admin/view_order/<int:order_id>", methods=['POST', 'GET'])
 @login_required
 @admin_required
-def view_order(business_id):
+def view_order(order_id):
     helper_class = helpers.CreateOrder(CSV_FILE, None, None)
-    business_details = helper_class.add_business_details(business_id)
-    order_id = business_details[0]
+    business_details = helper_class.add_business_details(order_id)
     business_address = business_details[2]
     address_helper = helper_class.manage_address(business_address)
     
@@ -204,7 +213,6 @@ def view_order(business_id):
     name_order_id = business_details[1] + str(order_id)
     barcode_name = helper_class.create_barcode(name_order_id)
     barcode_url = url_for("static", filename=barcode_name)
-    print(barcode_name)
 
     
 
@@ -213,6 +221,76 @@ def view_order(business_id):
 
     return render_template("HTML/pick_note.html", order_details = order_details, product_details=product_details, barcode=barcode_url)
     
+@app.route("/admin/view_invoice/<int:order_id>", methods=['POST', 'GET'])
+@login_required
+@admin_required
+def view_invoice(order_id):
+    helpers_class = helpers.CreateOrder(CSV_FILE, None, None)
+    if helpers_class.view_invoice(order_id) != "No invoice":
+        business_name, business_no = helpers_class.invoice_business_details(order_id)
+        business_details = {"business_name" : business_name,
+                            "business_number" : business_no}
+
+
+        invoice_id, fulfillment_date, VAT, order_date, deadline_date = helpers_class.view_invoice(order_id)
+        invoice_details = {"i_id" : invoice_id,
+                        "f_date" : fulfillment_date,
+                        "VAT" : VAT,
+                        "o_date" : order_date,
+                        "d_date" : deadline_date}
+        
+
+        subtotal, total = helpers_class.invoice_payments(order_id)
+        payment_details = {"subtotal" : subtotal,
+                        "total" : total}
+        
+        name, price, qty = helpers_class.product_details(order_id)
+        order_details = {"Name" : name,
+                        "Price" : price,
+                        "Qty" : qty}
+        
+        
+        
+
+        return render_template("HTML/invoice.html", business_deets = business_details, invoice_deets = invoice_details, payment_deets = payment_details, order_deets = order_details)
+    else:
+        return render_template("HTML/invoice_not_found.html")
+
+
+@app.route("/admin/edit_orders_dash", methods=['POST', 'GET'])
+@login_required
+@admin_required
+def edit_orders():
+    helper_class = helpers.CreateOrder(None, None, None)
+    business_with_id = helper_class.display_pending_business()
+
+    return render_template("HTML/edit_order_dash.html", business_details = business_with_id)
+@app.route("/admin/edit_order/<int:business_id>", methods=['POST', 'GET'])
+@login_required
+@admin_required
+def edit_order(business_id):
+    helper_class = helpers.CreateOrder(None, None, None)
+    name, temp_address, order_id, status = helper_class.pending_business_details(business_id)
+    address = helper_class.manage_address(temp_address)
+    
+    order_details = {"name" : name,
+                     "address1" : address[0],
+                     "address2" : address[1],
+                     "address3" : address[2],
+                     "address4" : address[3],
+                     "orderID" : order_id,
+                     "status" : status}
+    return render_template("HTML/edit_order.html", order_details = order_details)
+
+@app.route("/admin/edit_order/<int:order_id>/save", methods=['POST', 'GET'])
+@login_required
+@admin_required
+def edit_order_save(order_id):
+    if request.method == "POST":
+        selection = request.form.get("order_stat")
+        helper_class = helpers.CreateOrder(None, None, None)
+        print(helper_class.change_status(order_id, selection))
+    return redirect(url_for("edit_orders"))
 
 @app.route('/products', methods=['GET', 'POST'])
 @login_required

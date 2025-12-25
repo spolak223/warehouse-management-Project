@@ -1,0 +1,81 @@
+body { 
+    background: rgb(50, 50, 50);
+    padding : 20px;
+}
+
+.page {
+    width : 210mm;
+    min-height : 297mm;
+    padding : 20mm;
+    background: white;
+    margin: auto;
+    box-shadow: black 0 10px;
+}
+
+h1  {
+    font-size: 45px;
+    text-align: left;
+}
+
+hr { 
+    height: 3px;
+    background: black;
+}
+
+
+
+.top_page { 
+    display: flex;
+    justify-content: space-between;
+}
+
+.invoice_details { 
+    text-align: left;
+}
+
+.company_details {
+    text-align: left;
+}
+
+.products_table { 
+    table-layout: fixed;
+    width: 100%;
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+.products_table th { 
+    border: 1px solid black;
+    padding: 8px;
+    text-align: left;
+}
+
+.products_table { 
+    border: 1px solid black;
+    padding: 8px;
+}
+
+#prices { 
+    text-align: right;
+}
+
+@media print { 
+    body { 
+        background: None;
+        padding : 0;
+        margin: 0;
+    }
+
+    .page { 
+        width : 210mm;
+        min-height: 297mm;
+        margin: 0;
+        padding : 20mm;
+        box-shadow: None;
+    }
+}
+
+@page {
+    size: A4;
+    margin: 0;
+}

@@ -14,7 +14,7 @@
                     {%for business in data%}
                         <tr>
                             <td><b>Business:</b> {{business[0].title()}}<br><b>Business ID:</b> {{business[1]}}</td>
-                            <td><a href="{{url_for('view_order', business_id=business[1])}}">View Orders</a><br><a href="">Edit Orders</a></td>
+                            <td><a href="{{url_for('view_businesses_orders', business_id=business[1])}}">View Orders</a><br><a href="{{url_for('view_businesses_invoices', business_id=business[1])}}">View Invoices</a></td>
                         </tr>
                         
                     {%endfor%}

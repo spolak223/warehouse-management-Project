@@ -49,7 +49,6 @@ with sqlite3.connect("databases/manage_orders.db") as invoices_db:
     "invoice_id INTEGER PRIMARY KEY AUTOINCREMENT," \
     "order_id INTEGER UNIQUE NOT NULL," \
     "issue_date DATE," \
-    "deadline_date DATE," \
     "date_fulfilled DATE," \
     "subtotal REAL NOT NULL," \
     "VAT INTEGER NOT NULL," \

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+    </head>
+    <body>
+        <a href="/homepage/admin"><button><img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" height="50" width="50"></button></a>
+        <p><b>Business Name: </b>{{order_details.name.title()}}</p>
+        <p><b>Business Address:</b></p>
+        <p>{{order_details.address1}}</p>
+        <p>{{order_details.address2}}</p>
+        <p>{{order_details.address3}}</p>
+        <p>{{order_details.address4}}</p>
+        <p><b>Order ID: </b>{{order_details.orderID}}</p>
+        <form action="/admin/edit_order/{{order_details.orderID}}/save" method="POST">
+            <label for="order_stat"><b>Order Status</b></label>
+            <select name="order_stat" id="order_stat">
+                <option {%if order_details.status == "Pending"%}selected{%endif%}>
+                    Pending
+                </option>
+                <option>
+                    Completed
+                </option>
+
+            </select><br><br>
+            <button type="submit">Save</button>
+        </form>
+        <a href="/admin/edit_orders_dash"><button>Cancel</button></a>
+        
+        
+    </body>
+</html>

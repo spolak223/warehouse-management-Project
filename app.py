@@ -6,14 +6,16 @@ from dotenv import load_dotenv
 import os
 import sqlite3
 from datetime import timedelta
-
+import duckdb
+import time
 
 app = Flask(__name__)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
-CSV_FILE = "static/tech_products.csv"
+duck_path = "databases/manage_products.db"
+DUCKDB_CON = duckdb.connect(duck_path)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -119,8 +121,7 @@ def create_order():
                  'product_type' : request.form['p_type'],
                  'product_id' : request.form['p_id'],
                  'quantity_ordered' : request.form['q_ordered']}
-        helpers_order = helpers.CreateOrder(CSV_FILE, order)
-        print(order)
+        helpers_order = helpers.CreateOrder(DUCKDB_CON, order)
         
         if helpers_order.verify_order_validity(order['product_type'], order['product_id']):
             if helpers_order.verify_stock(order['quantity_ordered'], order['product_id']):
@@ -128,6 +129,7 @@ def create_order():
                 if temp_total:
                     total = temp_total
                     helpers_order.add_order_to_db(total)
+                    helpers_order.handle_stock()
                 return render_template("HTML/create-order.html", total=total, order=order)
 
 
@@ -145,7 +147,7 @@ def verify_order():
              "qty" : order_qty,
              "type" : order_type,
              "date" : order_date}
-    verify_order_helpers = helpers.CreateOrder(CSV_FILE, None, order)
+    verify_order_helpers = helpers.CreateOrder(DUCKDB_CON, None, order)
     check_frontend = verify_order_helpers.verify_frontend()
     if check_frontend == True:
         return jsonify({
@@ -190,7 +192,7 @@ def view_businesses_invoices(business_id):
 @login_required
 @admin_required
 def view_order(order_id):
-    helper_class = helpers.CreateOrder(CSV_FILE, None, None)
+    helper_class = helpers.CreateOrder(DUCKDB_CON, None, None)
     business_details = helper_class.add_business_details(order_id)
     business_address = business_details[2]
     address_helper = helper_class.manage_address(business_address)
@@ -225,7 +227,7 @@ def view_order(order_id):
 @login_required
 @admin_required
 def view_invoice(order_id):
-    helpers_class = helpers.CreateOrder(CSV_FILE, None, None)
+    helpers_class = helpers.CreateOrder(DUCKDB_CON, None, None)
     if helpers_class.view_invoice(order_id) != "No invoice":
         business_name, business_no = helpers_class.invoice_business_details(order_id)
         business_details = {"business_name" : business_name,
@@ -292,16 +294,32 @@ def edit_order_save(order_id):
         print(helper_class.change_status(order_id, selection))
     return redirect(url_for("edit_orders"))
 
+@app.route("/admin/stock_control", methods=['POST', 'GET'])
+@login_required
+@admin_required
+def stock_control():
+    helper_class = helpers.CreateOrder(DUCKDB_CON, None, None)
+    error_message = ""
+    if request.method == "POST":
+        SKU = request.form.get("stock_code")
+        qty = request.form.get("reorder_qty")
+        if helper_class.reorder_stock(SKU, qty):
+            error_message = ""
+        else:
+            error_message = "Incorrect fields!"
+            
+    return render_template("HTML/stock_control.html", error_message=error_message)
+
 @app.route('/products', methods=['GET', 'POST'])
 @login_required
 def products_page():
-    products = helpers.display_products(CSV_FILE)
+    products = helpers.display_products(DUCKDB_CON)
     if request.method == "POST":
         filter_option = request.form['filter']
         search_option = request.form['search']
         print(filter_option, search_option)
-        filtered = helpers.sort_data(CSV_FILE, filter_option)
-        searched_with_filter = helpers.search_and_filter(CSV_FILE, search_option, filter_option)
+        filtered = helpers.sort_data(DUCKDB_CON, filter_option)
+        searched_with_filter = helpers.search_and_filter(DUCKDB_CON, search_option, filter_option)
         if searched_with_filter:
             print("User is searching and filtering")
             return render_template("HTML/products.html", products=searched_with_filter[0])
@@ -394,4 +412,4 @@ def sign_up_form():
 
 
 if __name__ == '__main__':
-    app.run(port=1000, debug=True)
+    app.run(port=1000, debug=False)

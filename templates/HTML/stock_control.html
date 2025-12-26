@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="{{url_for("static", filename="CSS/stock_styles.css")}}" rel="stylesheet"/>
+
+    </head>
+    <body>
+        <a href="/homepage/admin"><button><img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" height="50" width="50"></button></a>
+        <h1>Welcome to stock control!</h1>
+        <form action="/admin/stock_control" method="POST">
+            <label for="stock_code">Enter Product Code: </label>
+            <input type="text" name="stock_code" id="stock_code"><br><br>
+
+            <label for="reorder_qty">Enter Reorder Quantity: </label>
+            <input type="number" name="reorder_qty" id="reorder_qty"><br><br>
+
+            <button type="submit">Place Order</button>
+        </form>
+
+        {%if error_message%}
+        <div id="error_box">
+            {{error_message}}
+
+        </div>
+
+        <script>
+            setTimeout(() =>  {
+                const error_box = document.getElementById("error_box");
+                if (error_box) error_box.style.display = "none";
+
+            }, 3000)
+        </script>
+        {%endif%}
+        
+    </body>
+</html>

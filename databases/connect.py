@@ -1,6 +1,20 @@
 import sqlite3
+import duckdb
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+db_path  = os.path.join(BASE_DIR, "databases", "manage_products.db")
+csv_path = os.path.join(BASE_DIR, "static", "tech_products.csv")
+
 
 #once databases have been created, feel free to comment out the ones you don't need
+
+duckdb_con = duckdb.connect(db_path)
+duckdb_con.execute("" \
+"CREATE TABLE IF NOT EXISTS products AS " \
+"SELECT * FROM read_csv_auto(?, header=True)", [csv_path])
+
+
 
 with sqlite3.connect("databases/logins.db") as conn:
     cursor = conn.cursor()
@@ -11,7 +25,7 @@ with sqlite3.connect("databases/logins.db") as conn:
     "password TEXT NOT NULL, " \
     "ROLE TEXT NOT NULL)")
     conn.commit()
-
+ 
 
 with sqlite3.connect("databases/manage_orders.db") as business_DB:
     cursor = business_DB.cursor()

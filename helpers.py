@@ -55,9 +55,9 @@ class ManageAdmins():
         pass
 
 class CreateOrder():
-    def __init__(self, CSV_FILE=None, order=None, order_frontend=None):
+    def __init__(self, DUCKDB_CON=None, order=None, order_frontend=None):
         self.order = order
-        self.CSV_FILE = CSV_FILE
+        self.DUCKDB_CON = DUCKDB_CON
         self.VAT = 1.2
         self.order_frontend = order_frontend
         if order:
@@ -74,8 +74,8 @@ class CreateOrder():
         if int(self.order_frontend["qty"]) <= 0:
             return {"error_with" : "Quantity cannot be less than or equal to 0!"}
         else:
-            query = f"SELECT SKU, Category, Stock FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ? AND Category = ?"
-            request = duckdb.execute(query, [self.order_frontend['sku'], self.order_frontend['type']]).df().to_dict("records")
+            query = "SELECT SKU, Category, Stock FROM products WHERE SKU = ? AND Category = ?"
+            request = self.DUCKDB_CON.execute(query, [self.order_frontend['sku'], self.order_frontend['type']]).df().to_dict("records")
             if not request:
                 return {"error_with" : "Orders' SKU code does not match the type of the product!"}
             elif request[0]['Stock'] < int(self.order_frontend["qty"]):
@@ -95,8 +95,8 @@ class CreateOrder():
     def verify_order_validity(self, product_type, SKU_code):
         if self.order['quantity_ordered']:
             if int(self.order['quantity_ordered']) != 0:
-                query = f"SELECT SKU, Category, Stock FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ? AND Category = ?"
-                request = duckdb.execute(query, [SKU_code, product_type]).df().to_dict("records")
+                query = "SELECT SKU, Category, Stock FROM products WHERE SKU = ? AND Category = ?"
+                request = self.DUCKDB_CON.execute(query, [SKU_code, product_type]).df().to_dict("records")
                 if not request:
                     return False
                 elif request[0]['Stock'] < int(self.order['quantity_ordered']):
@@ -189,14 +189,37 @@ class CreateOrder():
     
     
 
+    def handle_stock(self):
+        order_qty = self.order['quantity_ordered']
+        query = "SELECT Stock FROM products WHERE SKU = ?"
+        stock = self.DUCKDB_CON.execute(query, [self.order['product_id']]).df().to_dict("records")
+        stock = stock[0]['Stock']
+        calculate_stock = int(stock) - int(order_qty)
+        stock_query = "UPDATE products SET Stock = ? WHERE SKU = ?"
+        self.DUCKDB_CON.execute(stock_query, [calculate_stock, self.order['product_id']])
     
+    def reorder_stock(self, SKU, qty):
+        if qty.isnumeric() and int(qty) > 0:
+            stock_query = "SELECT Stock FROM products WHERE SKU = ?"
+            current_stock = self.DUCKDB_CON.execute(stock_query, [SKU]).df().to_dict("records")
+            if current_stock:
+                new_stock = int(qty) + int(current_stock[0]["Stock"])
+                reorder = "UPDATE products SET Stock = ? WHERE SKU = ?"
+                self.DUCKDB_CON.execute(reorder, [new_stock, SKU])
+                return True
+        return False
+
+
+
+
+        
 
 
             
 
     def verify_stock(self, order_qty, SKU_code):
-        query = f"SELECT Stock FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ?"
-        request = duckdb.execute(query, [SKU_code]).df().to_dict("records")
+        query = "SELECT Stock FROM products WHERE SKU = ?"
+        request = self.DUCKDB_CON.execute(query, [SKU_code]).df().to_dict("records")
         if request:
             if request[0]['Stock'] < int(order_qty):
                 return {"error" : "Current order of stock exceeds available stock!"}, False
@@ -204,8 +227,8 @@ class CreateOrder():
         
 
     def calculate_total(self, qty_ordered, SKU_code):
-        query = f"SELECT Price FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ?"
-        request = duckdb.execute(query, [SKU_code]).df().to_dict("records")
+        query = "SELECT Price FROM products WHERE SKU = ?"
+        request = self.DUCKDB_CON.execute(query, [SKU_code]).df().to_dict("records")
         if request:
             self.subtotal = float(request[0]['Price']) * int(qty_ordered)
             self.subtotal = round(self.subtotal, 2)
@@ -222,7 +245,7 @@ class CreateOrder():
     def add_business_details(self, order_id):
         with sqlite3.connect("databases/manage_orders.db") as order:
             cursor = order.cursor()
-            cursor.execute("SELECT orders.order_id, business.business_name, business.business_address, orders.order_date FROM orders INNER JOIN business ON orders.business_id = business.business_id WHERE orders.order_id = ?", (str(order_id)))
+            cursor.execute("SELECT orders.order_id, business.business_name, business.business_address, orders.order_date FROM orders INNER JOIN business ON orders.business_id = business.business_id WHERE orders.order_id = ?", (str(order_id), ))
             result = cursor.fetchone()
         return result
     
@@ -238,13 +261,13 @@ class CreateOrder():
     def manage_product(self, order_id):
         with sqlite3.connect("databases/manage_orders.db") as order:
             cursor = order.cursor()
-            cursor.execute("SELECT orders.product_id, orders.order_quantity FROM orders WHERE orders.order_id = ?", (str(order_id)), )
+            cursor.execute("SELECT orders.product_id, orders.order_quantity FROM orders WHERE orders.order_id = ?", (str(order_id), ) )
             id_and_qty = cursor.fetchone()
             SKU, _ = id_and_qty
 
         
-        query = f"SELECT Name FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ?"
-        request = duckdb.execute(query, [SKU]).df().to_dict("records")
+        query = "SELECT Name FROM products WHERE SKU = ?"
+        request = self.DUCKDB_CON.execute(query, [SKU]).df().to_dict("records")
 
         return id_and_qty, request
     
@@ -272,18 +295,16 @@ class CreateOrder():
     def view_invoice(self, order_id):
         with sqlite3.connect("databases/manage_orders.db") as invoice:
             cursor = invoice.cursor()
-            cursor.execute("SELECT orders.status FROM orders WHERE orders.order_id = ?", (str(order_id)), )
+            cursor.execute("SELECT orders.status FROM orders WHERE orders.order_id = ?", (str(order_id), ) )
             status = cursor.fetchone()
             if status[0] != "Awaiting Payment":
-                cursor.execute("SELECT invoices.invoice_id, invoices.date_fulfilled, invoices.VAT, orders.order_date, orders.deadline_date FROM invoices INNER JOIN orders ON invoices.order_id = orders.order_id WHERE invoices.order_id = ?", (str(order_id)),) 
+                cursor.execute("SELECT invoices.invoice_id, invoices.date_fulfilled, invoices.VAT, orders.order_date, orders.deadline_date FROM invoices INNER JOIN orders ON invoices.order_id = orders.order_id WHERE invoices.order_id = ?", (str(order_id), )) 
                 result = cursor.fetchone()
-                print(result)
                 invoice_id, fulfilled, VAT, order_date, deadline = result
                 temp_time = datetime.strptime(deadline, "%Y-%m-%d %H:%M:%S")
                 deadline_result = temp_time.strftime("%d/%m/%Y")
                 temp_order_time = datetime.strptime(order_date, "%Y-%m-%d")
                 order_time_result = temp_order_time.strftime("%d/%m/%Y")
-                print(invoice_id, fulfilled, VAT, order_time_result, deadline_result)
                     
                 return invoice_id, fulfilled, VAT, order_time_result, deadline_result   
             else:
@@ -292,7 +313,7 @@ class CreateOrder():
     def invoice_payments(self, order_id):
         with sqlite3.connect("databases/manage_orders.db") as invoice:
             cursor = invoice.cursor()
-            cursor.execute("SELECT invoices.subtotal, orders.total FROM invoices INNER JOIN orders ON invoices.order_id = orders.order_id WHERE orders.order_id = ?", (str(order_id)), )
+            cursor.execute("SELECT invoices.subtotal, orders.total FROM invoices INNER JOIN orders ON invoices.order_id = orders.order_id WHERE orders.order_id = ?", (str(order_id), ) )
             result = cursor.fetchone()
             subtotal, total = result
         
@@ -301,11 +322,11 @@ class CreateOrder():
     def product_details(self, order_id):
         with sqlite3.connect("databases/manage_orders.db") as invoice:
             cursor = invoice.cursor()
-            cursor.execute("SELECT orders.order_quantity, orders.product_id FROM orders WHERE orders.order_id = ?", (str(order_id)), )
+            cursor.execute("SELECT orders.order_quantity, orders.product_id FROM orders WHERE orders.order_id = ?", (str(order_id), ) )
             result = cursor.fetchone()
             qty, product_id = result
-            query = f"SELECT Name, Price FROM read_csv_auto('{self.CSV_FILE}') WHERE SKU = ?"
-            request = duckdb.execute(query, [product_id]).df().to_dict("records")
+            query = "SELECT Name, Price FROM products WHERE SKU = ?"
+            request = self.DUCKDB_CON.execute(query, [product_id]).df().to_dict("records")
             name = request[0]['Name']
             price = request[0]['Price']
         return name, price, qty
@@ -313,7 +334,7 @@ class CreateOrder():
     def invoice_business_details(self, order_id):
         with sqlite3.connect("databases/manage_orders.db") as business:
             cursor = business.cursor()
-            cursor.execute("SELECT business.business_name, business.business_id FROM business INNER JOIN orders ON orders.business_id = business.business_id WHERE orders.order_id = ?", (str(order_id)), )
+            cursor.execute("SELECT business.business_name, business.business_id FROM business INNER JOIN orders ON orders.business_id = business.business_id WHERE orders.order_id = ?", (str(order_id), ) )
             name, b_id = cursor.fetchone()
         return name, b_id
     
@@ -432,25 +453,22 @@ def auth_user(username, password):
 
 
 
-def display_products(csv_file):
-    data = pandas.read_csv(csv_file)
-    
-    return data.to_dict(orient="records")
+def display_products(DUCKDB_CON):
+    return DUCKDB_CON.execute("SELECT * FROM products").df().to_dict("records")
 
-def sort_data(csv_file, order_by):
-    filter_dict = {'H2LPrice' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Price" DESC',
-                   'L2HPrice' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Price" ASC',
-                   'H2LName' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Name" DESC', 
-                   'L2HName' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Name" ASC',
-                   'H2LStock' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Stock" DESC', 
-                   'L2HStock' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "Stock" ASC',
-                   'H2LID' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "ID" DESC',
-                   'L2HID' : f'SELECT * FROM read_csv_auto("{csv_file}") ORDER BY "ID" ASC'}
-    return duckdb.sql(filter_dict[order_by]).df().to_dict("records")
+def sort_data(DUCKDB_CON, order_by):
+    filter_dict = {'H2LPrice' : 'SELECT * FROM products ORDER BY "Price" DESC',
+                   'L2HPrice' : 'SELECT * FROM products ORDER BY "Price" ASC',
+                   'H2LName' : 'SELECT * FROM products ORDER BY "Name" DESC', 
+                   'L2HName' : 'SELECT * FROM products ORDER BY "Name" ASC',
+                   'H2LStock' : 'SELECT * FROM products ORDER BY "Stock" DESC', 
+                   'L2HStock' : 'SELECT * FROM products ORDER BY "Stock" ASC',
+                   'H2LID' : 'SELECT * FROM products ORDER BY "ID" DESC',
+                   'L2HID' : 'SELECT * FROM products ORDER BY "ID" ASC'}
+    return DUCKDB_CON.execute(filter_dict[order_by]).df().to_dict("records")
 
-def search_and_filter(csv_file, user_inp, order_by):
+def search_and_filter(DUCKDB_CON, user_inp, order_by):
     if user_inp and order_by:
-        print("function should be working!")
         filter_dict = {'H2LPrice' : "Price DESC",
                     'L2HPrice' : "Price ASC",
                     'H2LName' : "Name DESC",
@@ -461,8 +479,8 @@ def search_and_filter(csv_file, user_inp, order_by):
                     'L2HID' : "ID ASC"}
         order_value = filter_dict[order_by]
         search = f"%{user_inp}%"
-        query = f'''SELECT * FROM read_csv_auto("{csv_file}") WHERE "SKU" ILIKE ? OR "Name" ILIKE ? ORDER BY {order_value}'''
-        return duckdb.execute(query, [search, search]).df().to_dict("records"), True
+        query = f'''SELECT * FROM products WHERE "SKU" ILIKE ? OR "Name" ILIKE ? ORDER BY {order_value}'''
+        return DUCKDB_CON.execute(query, [search, search]).df().to_dict("records"), True
     return False
     
     
